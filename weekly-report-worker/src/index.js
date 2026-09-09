@@ -1,5 +1,3 @@
-const REPORT_TO = "founder@theperfectthingy.com";
-const REPORT_FROM = "reports@theperfectthingy.com";
 const GUIDE_NAME = "The Perfect Thingy Public AI Guide";
 
 function cleanLine(value) {
@@ -171,24 +169,53 @@ async function deleteEvents(env, events) {
   }
 }
 
+async function deliverReport(env, report) {
+  if (!env.REPORT_WEBHOOK_URL) {
+    throw new Error("REPORT_WEBHOOK_URL is missing.");
+  }
+
+  if (!env.REPORT_WEBHOOK_SECRET) {
+    throw new Error("REPORT_WEBHOOK_SECRET is missing.");
+  }
+
+  const response = await fetch(env.REPORT_WEBHOOK_URL, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      secret: env.REPORT_WEBHOOK_SECRET,
+      source: "tpt-public-ai-weekly-report",
+      subject: report.subject,
+      text: report.text
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Report webhook failed with HTTP ${response.status}.`);
+  }
+
+  let result = null;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Report webhook did not return JSON confirmation.");
+  }
+
+  if (result?.ok !== true) {
+    throw new Error("Report webhook did not confirm successful delivery.");
+  }
+}
+
 async function sendReport(env) {
   if (!env.QUESTION_LOG) {
     throw new Error("QUESTION_LOG KV binding is missing.");
   }
 
-  if (!env.EMAIL) {
-    throw new Error("EMAIL send binding is missing.");
-  }
-
   const events = await listEvents(env);
   const report = buildReport(events);
 
-  await env.EMAIL.send({
-    to: REPORT_TO,
-    from: REPORT_FROM,
-    subject: report.subject,
-    text: report.text
-  });
+  await deliverReport(env, report);
 
   if (events.length) {
     await deleteEvents(env, events);
