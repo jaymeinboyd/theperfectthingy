@@ -6,10 +6,11 @@
   "observability": {
     "logs": {
       "enabled": true,
-      "invocation_logs": true
+      "invocation_logs": true,
+      "persist": true
     }
   },
   "triggers": {
-    "crons": ["0 16 * * 1"]
+    "crons": ["0 16 * * 1", "*/20 * * * *"]
   }
 }
