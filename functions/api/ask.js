@@ -187,7 +187,7 @@ function normalizeTelemetry(parsed) {
 }
 
 async function logQuestion(context, telemetry, rawQuestion) {
-  if (!context.env.TOPIC_LOG) return;
+  if (!context.env.QUESTION_LOG) return;
 
   const timestamp = new Date().toISOString();
   const day = timestamp.slice(0, 10);
@@ -203,7 +203,7 @@ async function logQuestion(context, telemetry, rawQuestion) {
     review: telemetry.review
   };
 
-  await context.env.TOPIC_LOG.put(key, JSON.stringify(record), {
+  await context.env.QUESTION_LOG.put(key, JSON.stringify(record), {
     expirationTtl: 60 * 60 * 24 * 35
   });
 }
@@ -222,7 +222,7 @@ export async function onRequestGet(context) {
     ok: true,
     configured: Boolean(context.env.DEEPSEEK_API_KEY),
     knowledgeLoaded,
-    questionLoggingConfigured: Boolean(context.env.TOPIC_LOG),
+    questionLoggingConfigured: Boolean(context.env.QUESTION_LOG),
     knowledgeSource: KNOWLEDGE_PATH,
     service: "The Perfect Thingy public AI guide"
   });
@@ -341,7 +341,7 @@ export async function onRequestPost(context) {
 
     const telemetry = normalizeTelemetry(parsed);
 
-    if (context.env.TOPIC_LOG) {
+    if (context.env.QUESTION_LOG) {
       const currentQuestion = messages[messages.length - 1]?.content || "";
       context.waitUntil(
         logQuestion(context, telemetry, currentQuestion).catch(() => {})
