@@ -250,10 +250,23 @@
 
     @media (max-width:640px) {
       main { padding-top:38px; }
-      .message { max-width:92%; }
-      form { grid-template-columns:1fr; }
+      .messages {
+        min-height:0;
+        max-height:none;
+        overflow:visible;
+        padding:18px 16px;
+      }
+      .message {
+        max-width:94%;
+        scroll-margin-top:12px;
+      }
+      form {
+        grid-template-columns:1fr;
+        padding:16px;
+      }
       button.send { width:100%; }
       .chat-top { align-items:flex-start; flex-direction:column; gap:4px; }
+      .starters { padding:0 16px 16px; }
     }
   </style>
 </head>
@@ -344,13 +357,26 @@
       div.className = "message " + role;
       div.textContent = text;
       messagesEl.appendChild(div);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return div;
+    }
+
+    function revealMessage(element) {
+      const mobile = window.matchMedia("(max-width: 640px)").matches;
+
+      if (mobile) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        messagesEl.scrollTo({
+          top: Math.max(0, element.offsetTop - 16),
+          behavior: "smooth"
+        });
+      }
     }
 
     function setBusy(value) {
       busy = value;
       send.disabled = value;
-      input.disabled = value;
+      input.readOnly = value;
       send.textContent = value ? "Thinking…" : "Ask";
     }
 
@@ -368,12 +394,16 @@
       const trimmed = question.trim();
       if (!trimmed || busy) return;
 
-      addMessage("user", trimmed);
+      const userMessage = addMessage("user", trimmed);
       history.push({ role: "user", content: trimmed });
       input.value = "";
       startersEl.hidden = true;
       setBusy(true);
       statusEl.textContent = "Answering…";
+
+      const pending = addMessage("assistant", "Thinking…");
+      pending.setAttribute("aria-label", "AI guide is thinking");
+      revealMessage(pending);
 
       try {
         const response = await fetch("/api/ask", {
@@ -388,18 +418,22 @@
           throw new Error(data.error || "The AI guide could not answer.");
         }
 
-        addMessage("assistant", data.reply);
+        pending.textContent = data.reply;
+        pending.removeAttribute("aria-label");
         history.push({ role: "assistant", content: data.reply });
         statusEl.textContent = "Pilot connected";
+        revealMessage(pending);
       } catch (error) {
-        addMessage(
-          "assistant",
-          error.message || "I couldn't answer just now. You can reach Jayme at founder@theperfectthingy.com."
-        );
+        pending.textContent =
+          error.message || "I couldn't answer just now. You can reach Jayme at founder@theperfectthingy.com.";
+        pending.removeAttribute("aria-label");
         statusEl.textContent = "Connection needs attention";
+        revealMessage(pending);
       } finally {
         setBusy(false);
-        input.focus();
+        if (window.matchMedia("(pointer: fine)").matches) {
+          input.focus();
+        }
       }
     }
 
