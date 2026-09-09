@@ -418,10 +418,27 @@
           body: JSON.stringify({ messages: history.slice(-10) })
         });
 
-        const data = await response.json();
+        const contentType = (response.headers.get("content-type") || "").toLowerCase();
+        let data = null;
+
+        if (contentType.includes("application/json")) {
+          data = await response.json();
+        } else {
+          await response.text();
+
+          if (!response.ok) {
+            throw new Error(
+              response.status === 502
+                ? "The guide hit a temporary server connection problem. Please try that question again in a moment."
+                : `The guide received an unexpected server response (HTTP ${response.status}). Please try again shortly.`
+            );
+          }
+
+          throw new Error("The guide received an unreadable server response. Please try again.");
+        }
 
         if (!response.ok) {
-          throw new Error(data.error || "The AI guide could not answer.");
+          throw new Error(data?.error || "The AI guide could not answer.");
         }
 
         pending.textContent = data.reply;
@@ -430,8 +447,13 @@
         statusEl.textContent = "Pilot connected";
         revealMessage(pending);
       } catch (error) {
+        const last = history[history.length - 1];
+        if (last?.role === "user" && last.content === trimmed) {
+          history.pop();
+        }
+
         pending.textContent =
-          error.message || "I couldn't answer just now. You can reach Jayme at founder@theperfectthingy.com.";
+          error.message || "I couldn't answer just now. Please try again shortly.";
         pending.removeAttribute("aria-label");
         statusEl.textContent = "Connection needs attention";
         revealMessage(pending);
