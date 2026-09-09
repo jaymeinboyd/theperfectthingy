@@ -226,6 +226,21 @@ async function sendReport(env) {
 
 export default {
   async scheduled(controller, env, ctx) {
-    await sendReport(env);
+    console.log("[weekly-report] scheduled invocation started", {
+      cron: controller.cron,
+      scheduledTime: controller.scheduledTime
+    });
+
+    try {
+      const count = await sendReport(env);
+      console.log("[weekly-report] completed successfully", {
+        eventCount: count
+      });
+    } catch (error) {
+      console.error("[weekly-report] failed", {
+        message: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
+    }
   }
 };
