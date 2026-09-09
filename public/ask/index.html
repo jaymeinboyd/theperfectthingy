@@ -267,6 +267,8 @@
       button.send { width:100%; }
       .chat-top { align-items:flex-start; flex-direction:column; gap:4px; }
       .starters { padding:0 16px 16px; }
+      .starter-secondary { display:none; }
+      .starter-primary { width:100%; }
     }
   </style>
 </head>
@@ -306,10 +308,10 @@
         </div>
 
         <div class="starters" id="starters">
-          <button class="starter" type="button">What does Jayme help small businesses do?</button>
-          <button class="starter" type="button">Could this help a business like mine?</button>
-          <button class="starter" type="button">What happens during an implementation?</button>
-          <button class="starter" type="button">How do I contact Jayme?</button>
+          <button class="starter starter-secondary" type="button">What does Jayme help small businesses do?</button>
+          <button class="starter starter-primary" type="button">Could this help a business like mine?</button>
+          <button class="starter starter-secondary" type="button">What happens during an implementation?</button>
+          <button class="starter starter-secondary" type="button">How do I contact Jayme?</button>
         </div>
 
         <form id="chat-form">
