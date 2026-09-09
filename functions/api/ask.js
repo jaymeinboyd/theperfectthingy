@@ -188,30 +188,120 @@ function normalizeTelemetry(parsed) {
   };
 }
 
-function deterministicSafetyCapture(rawQuestion) {
-  const q = String(rawQuestion || "").toLowerCase();
+function deterministicSafetyReason(rawText) {
+  const q = String(rawText || "").toLowerCase();
 
-  const whereabouts = /(where\s+(does|is|did|will)\s+jayme|home\s+address|street\s+address|where\s+she\s+lives|where\s+she\s+stays|where\s+is\s+she\s+now|current\s+location|daily\s+routine|what\s+time\s+does\s+she|when\s+is\s+she\s+home|license\s+plate)/i;
+  const whereabouts = /(where\s+(does|is|did|will)\s+jayme|where\s+does\s+she\s+live|where\s+is\s+she\s+living|home\s+address|street\s+address|where\s+she\s+lives|where\s+she\s+stays|where\s+is\s+she\s+now|current\s+location|daily\s+routine|what\s+time\s+does\s+she|when\s+is\s+she\s+home|license\s+plate)/i;
   const targeting = /(stalk|follow\s+her|track\s+her|watch\s+her|find\s+her|show\s+up\s+at|wait\s+for\s+her|hurt\s+her|harm\s+her|kill\s+her|shoot\s+her|attack\s+her|threaten\s+her)/i;
   const privateContact = /(personal\s+(phone|cell|email)|private\s+(phone|number|email)|home\s+(phone|number))/i;
 
-  return whereabouts.test(q) || targeting.test(q) || privateContact.test(q);
+  if (targeting.test(q)) return "targeting or threat language";
+  if (whereabouts.test(q)) return "private whereabouts or location probe";
+  if (privateContact.test(q)) return "private contact-information probe";
+  return null;
 }
 
-async function logQuestion(context, telemetry, rawQuestion, request) {
-  if (!context.env.QUESTION_LOG) return;
+function deterministicSafetyCapture(rawText) {
+  return Boolean(deterministicSafetyReason(rawText));
+}
+
+function requestEvidence(request) {
+  return {
+    sourceIp:
+      request.headers.get("CF-Connecting-IP") ||
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      "unavailable",
+    cfRay: request.headers.get("CF-Ray") || "unavailable"
+  };
+}
+
+async function preCaptureSafetyQuestion(context, messages) {
+  if (!context.env.QUESTION_LOG) return null;
+
+  const currentQuestion = messages[messages.length - 1]?.content || "";
+  const recentUserContext = messages
+    .filter((message) => message.role === "user")
+    .slice(-4)
+    .map((message) => message.content)
+    .join("\n");
+
+  const safetyReason = deterministicSafetyReason(recentUserContext);
+  if (!safetyReason) return null;
 
   const timestamp = new Date().toISOString();
   const day = timestamp.slice(0, 10);
   const id = crypto.randomUUID();
-  const safetyCapture =
-    telemetry.safetyCapture === true ||
-    deterministicSafetyCapture(rawQuestion);
+  const evidence = requestEvidence(context.request);
 
   const record = {
     timestamp,
     day,
-    question: String(rawQuestion || "").trim().slice(0, 1800),
+    question: String(currentQuestion).trim().slice(0, 1800),
+    topic: "Private or family information",
+    theme: safetyReason,
+    status: "pending",
+    review: true,
+    safetyCapture: true,
+    preAnswerCapture: true,
+    ...evidence
+  };
+
+  const eventKey = `event:${timestamp}:${id}`;
+  const safetyKey = `safety:${timestamp}:${id}`;
+
+  await Promise.all([
+    context.env.QUESTION_LOG.put(eventKey, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 35
+    }),
+    context.env.QUESTION_LOG.put(safetyKey, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 180
+    })
+  ]);
+
+  return { eventKey, safetyKey, record };
+}
+
+async function logQuestion(context, telemetry, rawQuestion, request, preCaptured = null) {
+  if (!context.env.QUESTION_LOG) return;
+
+  const raw = String(rawQuestion || "").trim().slice(0, 1800);
+  const safetyCapture =
+    telemetry.safetyCapture === true ||
+    deterministicSafetyCapture(raw) ||
+    Boolean(preCaptured);
+
+  if (preCaptured) {
+    const updatedRecord = {
+      ...preCaptured.record,
+      question: raw,
+      topic: telemetry.topic,
+      theme: telemetry.theme,
+      status: telemetry.status,
+      review: telemetry.review || true,
+      safetyCapture: true,
+      preAnswerCapture: false
+    };
+
+    await Promise.all([
+      context.env.QUESTION_LOG.put(preCaptured.eventKey, JSON.stringify(updatedRecord), {
+        expirationTtl: 60 * 60 * 24 * 35
+      }),
+      context.env.QUESTION_LOG.put(preCaptured.safetyKey, JSON.stringify(updatedRecord), {
+        expirationTtl: 60 * 60 * 24 * 180
+      })
+    ]);
+
+    return;
+  }
+
+  const timestamp = new Date().toISOString();
+  const day = timestamp.slice(0, 10);
+  const id = crypto.randomUUID();
+
+  const record = {
+    timestamp,
+    day,
+    question: raw,
     topic: telemetry.topic,
     theme: telemetry.theme,
     status: telemetry.status,
@@ -220,11 +310,7 @@ async function logQuestion(context, telemetry, rawQuestion, request) {
   };
 
   if (safetyCapture) {
-    record.sourceIp =
-      request.headers.get("CF-Connecting-IP") ||
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      "unavailable";
-    record.cfRay = request.headers.get("CF-Ray") || "unavailable";
+    Object.assign(record, requestEvidence(request));
   }
 
   const eventKey = `event:${timestamp}:${id}`;
@@ -302,6 +388,15 @@ export async function onRequestPost(context) {
     return json({ error: "Please send a question." }, 400);
   }
 
+  let preCapturedSafety = null;
+  if (context.env.QUESTION_LOG) {
+    try {
+      preCapturedSafety = await preCaptureSafetyQuestion(context, messages);
+    } catch {
+      preCapturedSafety = null;
+    }
+  }
+
   let publicKnowledge;
   try {
     publicKnowledge = await loadKnowledge(context);
@@ -377,7 +472,7 @@ export async function onRequestPost(context) {
     if (context.env.QUESTION_LOG) {
       const currentQuestion = messages[messages.length - 1]?.content || "";
       context.waitUntil(
-        logQuestion(context, telemetry, currentQuestion, context.request).catch(() => {})
+        logQuestion(context, telemetry, currentQuestion, context.request, preCapturedSafety).catch(() => {})
       );
     }
 
