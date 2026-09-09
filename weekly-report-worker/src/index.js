@@ -106,7 +106,11 @@ function buildReport(events) {
   const today = new Date().toISOString().slice(0, 10);
   const flagged = events.filter((event) => event.review);
   const gaps = events.filter(
-    (event) => event.status === "unknown" || event.status === "partial"
+    (event) =>
+      (event.status === "unknown" || event.status === "partial") &&
+      event.review !== true &&
+      event.safetyCapture !== true &&
+      event.topic !== "Private or family information"
   );
 
   const topicCounts = countBy(events, "topic");
