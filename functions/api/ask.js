@@ -29,6 +29,89 @@ const json = (data, status = 200, headers = {}) =>
     }
   });
 
+async function hashVisitor(value) {
+  const bytes = new TextEncoder().encode("tpt-public-ai:" + value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .slice(0, 12)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function incrementRateBucket(visitorHash, name, windowSeconds, limit) {
+  const now = Date.now();
+  const windowMs = windowSeconds * 1000;
+  const bucket = Math.floor(now / windowMs);
+  const bucketEndsAt = (bucket + 1) * windowMs;
+  const cacheKey = new Request(
+    `https://rate-limit.invalid/${name}/${visitorHash}/${bucket}`,
+    { method: "GET" }
+  );
+
+  const cache = caches.default;
+  const existing = await cache.match(cacheKey);
+  let count = 0;
+
+  if (existing) {
+    count = Number(await existing.text()) || 0;
+  }
+
+  count += 1;
+
+  await cache.put(
+    cacheKey,
+    new Response(String(count), {
+      headers: {
+        "cache-control": `max-age=${windowSeconds + 30}`
+      }
+    })
+  );
+
+  return {
+    allowed: count <= limit,
+    remaining: Math.max(0, limit - count),
+    retryAfter: Math.max(1, Math.ceil((bucketEndsAt - now) / 1000))
+  };
+}
+
+async function checkRateLimit(request) {
+  const rawVisitor =
+    request.headers.get("CF-Connecting-IP") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown";
+
+  try {
+    const visitorHash = await hashVisitor(rawVisitor);
+
+    const burst = await incrementRateBucket(visitorHash, "burst", 300, 20);
+    if (!burst.allowed) {
+      return {
+        allowed: false,
+        retryAfter: burst.retryAfter,
+        message: "You’ve asked quite a few questions in a short time. Please wait a few minutes and try again."
+      };
+    }
+
+    const hourly = await incrementRateBucket(visitorHash, "hourly", 3600, 100);
+    if (!hourly.allowed) {
+      return {
+        allowed: false,
+        retryAfter: hourly.retryAfter,
+        message: "This public guide has reached its hourly question limit for your connection. Please try again later."
+      };
+    }
+
+    return {
+      allowed: true,
+      remainingBurst: burst.remaining,
+      remainingHourly: hourly.remaining
+    };
+  } catch {
+    // Fail open: a cache/rate-limit problem should not take the public guide offline.
+    return { allowed: true };
+  }
+}
+
 async function loadKnowledge(context) {
   const assetUrl = new URL(KNOWLEDGE_PATH, context.request.url);
   const response = await context.env.ASSETS.fetch(new Request(assetUrl.toString()));
@@ -93,6 +176,15 @@ export async function onRequestPost(context) {
         error: "The AI guide is not connected yet. Please email founder@theperfectthingy.com in the meantime."
       },
       503
+    );
+  }
+
+  const rate = await checkRateLimit(context.request);
+  if (!rate.allowed) {
+    return json(
+      { error: rate.message },
+      429,
+      { "retry-after": String(rate.retryAfter) }
     );
   }
 
