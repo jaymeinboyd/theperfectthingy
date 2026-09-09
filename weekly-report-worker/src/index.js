@@ -40,7 +40,10 @@ async function listEvents(env) {
             topic: cleanLine(record.topic) || "Other",
             theme: cleanLine(record.theme) || "uncategorized question",
             status: cleanLine(record.status) || "partial",
-            review: record.review === true
+            review: record.review === true,
+            safetyCapture: record.safetyCapture === true,
+            sourceIp: cleanLine(record.sourceIp),
+            cfRay: cleanLine(record.cfRay)
           });
         } catch {
           // Leave malformed records in KV for manual inspection rather than deleting them.
@@ -84,11 +87,19 @@ function questionLines(events) {
   return events
     .map((event, index) => {
       const flag = event.review ? " [REVIEW]" : "";
-      return [
-        `${index + 1}. ${event.timestamp || event.day}${flag}`,
+      const safety = event.safetyCapture ? " [SAFETY EVIDENCE PRESERVED]" : "";
+      const lines = [
+        `${index + 1}. ${event.timestamp || event.day}${flag}${safety}`,
         `   Topic: ${event.topic} | Status: ${event.status} | Theme: ${event.theme}`,
         `   Question: ${event.question || "(empty question)"}`
-      ].join("\n");
+      ];
+
+      if (event.safetyCapture) {
+        lines.push(`   Source IP: ${event.sourceIp || "unavailable"}`);
+        lines.push(`   Cloudflare Ray ID: ${event.cfRay || "unavailable"}`);
+      }
+
+      return lines.join("\n");
     })
     .join("\n\n");
 }
@@ -141,9 +152,10 @@ function buildReport(events) {
     questionLines(events),
     "",
     "PRIVACY / RETENTION",
-    "The question log stores the exact text entered, timestamp, topic, generalized theme, answer-status classification, and review flag.",
-    "It does not store visitor IP address, location, or device identity in the question log.",
-    "After this email is sent successfully, the records represented here are deleted from the live question log. This email becomes the retained report."
+    "The ordinary question log stores the exact text entered, timestamp, topic, generalized theme, answer-status classification, and review flag.",
+    "Ordinary question records do not store visitor IP address, location, or device identity.",
+    "If a question is flagged for a potential safety or abuse concern, the source IP address and Cloudflare Ray ID may be preserved with that question. This is evidence for human review, not proof of the visitor's identity or intent.",
+    "After this email is sent successfully, the weekly event records represented here are deleted. Safety-evidence copies are retained separately for up to 180 days unless they expire or are handled through a later retention process."
   ].join("\n");
 
   return {
