@@ -42,14 +42,46 @@
     }
 
     .brand {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1.25rem;
       margin-bottom: 1.8rem;
     }
 
-    .brand img {
+    .brand > img {
       display: block;
-      width: min(100%, 720px);
+      flex: 1 1 auto;
+      min-width: 0;
+      width: min(100%, 620px);
       height: auto;
       margin-left: -2.5%;
+    }
+
+    .contact-link {
+      flex: 0 0 96px;
+      display: block;
+      text-align: center;
+      color: var(--deep-teal);
+      text-decoration: none;
+      font: 700 .68rem/1.25 Arial, sans-serif;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .contact-link img {
+      display: block;
+      width: 96px;
+      height: 96px;
+      margin: 0 0 .35rem;
+      padding: 5px;
+      background: #fff;
+      border: 1px solid rgba(47,107,109,.22);
+    }
+
+    .contact-link:focus-visible {
+      outline: 2px solid var(--deep-teal);
+      outline-offset: 5px;
     }
 
     .sr-only {
@@ -134,9 +166,23 @@
     }
 
     @media (max-width: 560px) {
-      .brand img {
+      .brand {
+        gap: .75rem;
+      }
+
+      .brand > img {
         margin-left: 0;
-        width: 100%;
+      }
+
+      .contact-link {
+        flex-basis: 72px;
+        font-size: .58rem;
+      }
+
+      .contact-link img {
+        width: 72px;
+        height: 72px;
+        padding: 4px;
       }
 
       .intro {
@@ -151,6 +197,10 @@
     <header class="brand">
       <h1 class="sr-only">The Perfect Thingy</h1>
       <img src="/assets/tpt-primary.svg" alt="The Perfect Thingy — Art, Ideas, Beauty, Story">
+      <a class="contact-link" href="/card/" aria-label="Open Jayme Hunt contact page">
+        <img src="/assets/contact-qr.svg" alt="QR code to Jayme Hunt contact page">
+        <span>Contact</span>
+      </a>
     </header>
 
     <p class="intro">
@@ -159,6 +209,11 @@
 
     <section>
       <h2>Now Available</h2>
+
+      <a class="work" href="/business/">
+        <strong>AI Companion for Business</strong>
+        <span>A private, business-owned AI capability built around the business you actually have—not a generic guess →</span>
+      </a>
 
       <a class="work"
          href="https://www.lulu.com/shop/jayme-hunt-and-molly-spirit-guide/lessons-from-spirit/paperback/product-45427wn.html?page=1&pageSize=4">
