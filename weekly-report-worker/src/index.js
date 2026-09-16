@@ -1,4 +1,5 @@
 const GUIDE_NAME = "The Perfect Thingy Public AI Guide";
+const LISTENING_NAME = "The Perfect Thingy Customer Listener";
 
 function cleanLine(value) {
   return String(value || "")
@@ -7,7 +8,7 @@ function cleanLine(value) {
     .trim();
 }
 
-async function listEvents(env) {
+async function listQuestionEvents(env) {
   const events = [];
   let cursor;
 
@@ -56,11 +57,82 @@ async function listEvents(env) {
   return events.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 }
 
-function countBy(events, field) {
+async function listFeedback(env) {
+  const feedback = [];
+  let cursor;
+
+  do {
+    const page = await env.QUESTION_LOG.list({
+      prefix: "feedback:",
+      limit: 1000,
+      ...(cursor ? { cursor } : {})
+    });
+
+    const names = page.keys.map((key) => key.name);
+
+    for (let i = 0; i < names.length; i += 100) {
+      const batch = names.slice(i, i + 100);
+      const values = await env.QUESTION_LOG.get(batch);
+
+      for (const key of batch) {
+        const raw = values.get(key);
+        if (!raw) continue;
+
+        try {
+          const record = JSON.parse(raw);
+          const conversation = Array.isArray(record.conversation)
+            ? record.conversation
+                .filter(
+                  (message) =>
+                    message &&
+                    (message.role === "user" || message.role === "assistant") &&
+                    typeof message.content === "string"
+                )
+                .slice(-10)
+                .map((message) => ({
+                  role: message.role,
+                  content: cleanLine(message.content).slice(0, 1800)
+                }))
+            : [];
+
+          feedback.push({
+            key,
+            createdAt: cleanLine(record.createdAt || record.updatedAt),
+            updatedAt: cleanLine(record.updatedAt || record.createdAt),
+            day: cleanLine(record.day),
+            sessionId: cleanLine(record.sessionId),
+            conversation,
+            signalType: cleanLine(record.signalType) || "other",
+            theme: cleanLine(record.theme) || "uncategorized feedback",
+            summary: cleanLine(record.summary) || "not yet summarized",
+            need: cleanLine(record.need) || "not stated",
+            workaround: cleanLine(record.workaround) || "not stated",
+            frequency: cleanLine(record.frequency) || "not stated",
+            impact: cleanLine(record.impact) || "not stated",
+            status: cleanLine(record.status) || "in_progress",
+            review: record.review === true,
+            safetyCapture: record.safetyCapture === true,
+            sourceIp: cleanLine(record.sourceIp),
+            cfRay: cleanLine(record.cfRay)
+          });
+        } catch {
+          // Leave malformed records in KV for manual inspection rather than deleting them.
+        }
+      }
+    }
+
+    if (page.list_complete) break;
+    cursor = page.cursor;
+  } while (cursor);
+
+  return feedback.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+function countBy(items, field) {
   const counts = new Map();
 
-  for (const event of events) {
-    const label = event[field] || "Other";
+  for (const item of items) {
+    const label = item[field] || "Other";
     counts.set(label, (counts.get(label) || 0) + 1);
   }
 
@@ -102,7 +174,43 @@ function questionLines(events) {
     .join("\n\n");
 }
 
-function buildReport(events) {
+function feedbackLines(feedback) {
+  if (!feedback.length) return "  None";
+
+  return feedback
+    .map((item, index) => {
+      const flag = item.review ? " [REVIEW]" : "";
+      const safety = item.safetyCapture ? " [SAFETY EVIDENCE PRESERVED]" : "";
+      const customerMessages = item.conversation.filter((message) => message.role === "user");
+      const exactWords = customerMessages.length
+        ? customerMessages
+            .map((message, messageIndex) => `      ${messageIndex + 1}. ${message.content}`)
+            .join("\n")
+        : "      (no visitor wording available)";
+
+      const lines = [
+        `${index + 1}. ${item.createdAt || item.day}${flag}${safety}`,
+        `   Signal: ${item.signalType} | Status: ${item.status} | Theme: ${item.theme}`,
+        `   Summary: ${item.summary}`,
+        `   Need / desired outcome: ${item.need}`,
+        `   Current workaround: ${item.workaround}`,
+        `   Frequency: ${item.frequency}`,
+        `   Impact: ${item.impact}`,
+        "   Customer wording — exact messages:",
+        exactWords
+      ];
+
+      if (item.safetyCapture) {
+        lines.push(`   Source IP: ${item.sourceIp || "unavailable"}`);
+        lines.push(`   Cloudflare Ray ID: ${item.cfRay || "unavailable"}`);
+      }
+
+      return lines.join("\n");
+    })
+    .join("\n\n");
+}
+
+function buildReport(events, feedback) {
   const today = new Date().toISOString().slice(0, 10);
   const flagged = events.filter((event) => event.review);
   const gaps = events.filter(
@@ -113,21 +221,65 @@ function buildReport(events) {
       event.topic !== "Private or family information"
   );
 
-  const topicCounts = countBy(events, "topic");
-  const themeCounts = countBy(events, "theme");
-  const statusCounts = countBy(events, "status");
+  const questionTopicCounts = countBy(events, "topic");
+  const questionThemeCounts = countBy(events, "theme");
+  const questionStatusCounts = countBy(events, "status");
   const gapThemeCounts = countBy(gaps, "theme");
 
-  const days = events.map((event) => event.day).filter(Boolean).sort();
+  const feedbackSignalCounts = countBy(feedback, "signalType");
+  const feedbackThemeCounts = countBy(feedback, "theme");
+  const feedbackStatusCounts = countBy(feedback, "status");
+  const feedbackReview = feedback.filter((item) => item.review);
+
+  const days = [
+    ...events.map((event) => event.day),
+    ...feedback.map((item) => item.day)
+  ]
+    .filter(Boolean)
+    .sort();
+
   const period = days.length
     ? `${days[0]} through ${days[days.length - 1]}`
     : "since the previous report";
 
   const text = [
-    `Weekly visitor-question report for ${GUIDE_NAME}`,
+    "Weekly customer-learning report for The Perfect Thingy",
     `Report date: ${today}`,
     `Period represented: ${period}`,
-    `Questions represented: ${events.length}`,
+    `Public-guide questions represented: ${events.length}`,
+    `Customer-listening conversations represented: ${feedback.length}`,
+    "",
+    "============================================================",
+    "WHAT CUSTOMERS ARE TELLING US",
+    "============================================================",
+    "",
+    `Customer-listening source: ${LISTENING_NAME}`,
+    "The listening system preserves the customer's exact messages and also supplies a neutral structured interpretation for clustering and review. The interpretation should never replace the source wording.",
+    "",
+    "SIGNAL TYPES",
+    bullets(feedbackSignalCounts),
+    "",
+    "COMMON FEEDBACK THEMES",
+    bullets(feedbackThemeCounts, 25),
+    "",
+    "CONVERSATION COMPLETION",
+    bullets(feedbackStatusCounts),
+    "",
+    "FEEDBACK REQUIRING OWNER REVIEW",
+    feedbackReview.length
+      ? "These conversations were flagged for a privacy, safety, abuse, or other non-routine boundary reason. A flag is not a conclusion about the visitor's intent."
+      : "No customer-listening conversations were flagged for owner review.",
+    "",
+    feedbackLines(feedbackReview),
+    "",
+    "ALL CUSTOMER FEEDBACK — SOURCE WORDING + INTERPRETATION",
+    feedbackLines(feedback),
+    "",
+    "============================================================",
+    "WHAT PEOPLE ARE ASKING",
+    "============================================================",
+    "",
+    `Public-guide source: ${GUIDE_NAME}`,
     "",
     "QUESTIONS TO REVIEW",
     flagged.length
@@ -137,13 +289,13 @@ function buildReport(events) {
     questionLines(flagged),
     "",
     "WHAT PEOPLE ARE ASKING ABOUT",
-    bullets(topicCounts),
+    bullets(questionTopicCounts),
     "",
-    "COMMON THEMES",
-    bullets(themeCounts, 25),
+    "COMMON QUESTION THEMES",
+    bullets(questionThemeCounts, 25),
     "",
     "HOW WELL THE CURRENT PUBLIC KNOWLEDGE COVERED THEM",
-    bullets(statusCounts),
+    bullets(questionStatusCounts),
     "",
     "POSSIBLE KNOWLEDGE GAPS TO REVIEW",
     gaps.length
@@ -153,23 +305,27 @@ function buildReport(events) {
     "ALL QUESTIONS — EXACT WORDING",
     questionLines(events),
     "",
+    "============================================================",
     "PRIVACY / RETENTION",
-    "The ordinary question log stores the exact text entered, timestamp, topic, generalized theme, answer-status classification, and review flag.",
-    "Ordinary question records do not store visitor IP address, location, or device identity.",
-    "If a question is flagged for a potential safety or abuse concern, the source IP address and Cloudflare Ray ID may be preserved with that question. This is evidence for human review, not proof of the visitor's identity or intent.",
-    "After this email is sent successfully, the weekly event records represented here are deleted. Safety-evidence copies are retained separately for up to 180 days unless they expire or are handled through a later retention process."
+    "============================================================",
+    "",
+    "Ordinary public-guide question records store the exact text entered, timestamp, topic, generalized theme, answer-status classification, and review flag.",
+    "Ordinary customer-listening records store the conversation text plus structured fields such as signal type, generalized theme, summary, stated need, workaround, frequency, impact, completion status, and review flag.",
+    "Ordinary question and feedback records do not intentionally store visitor IP address, location, or device identity.",
+    "If content is flagged for a potential safety or abuse concern, the source IP address and Cloudflare Ray ID may be preserved with that record. This is evidence for human review, not proof of the visitor's identity or intent.",
+    "After this email is sent successfully, the ordinary question events and feedback snapshots represented here are deleted. Separate safety-evidence copies may remain for up to 180 days."
   ].join("\n");
 
   return {
-    subject: `What People Are Asking — ${GUIDE_NAME}`,
+    subject: "What People Are Asking and Telling Us — The Perfect Thingy",
     text
   };
 }
 
-async function deleteEvents(env, events) {
-  for (let i = 0; i < events.length; i += 100) {
-    const batch = events.slice(i, i + 100);
-    await Promise.all(batch.map((event) => env.QUESTION_LOG.delete(event.key)));
+async function deleteRecords(env, records) {
+  for (let i = 0; i < records.length; i += 100) {
+    const batch = records.slice(i, i + 100);
+    await Promise.all(batch.map((record) => env.QUESTION_LOG.delete(record.key)));
   }
 }
 
@@ -184,9 +340,7 @@ async function deliverReport(env, report) {
 
   const response = await fetch(env.REPORT_WEBHOOK_URL, {
     method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
+    headers: { "content-type": "application/json" },
     body: JSON.stringify({
       secret: env.REPORT_WEBHOOK_SECRET,
       source: "tpt-public-ai-weekly-report",
@@ -216,16 +370,18 @@ async function sendReport(env) {
     throw new Error("QUESTION_LOG KV binding is missing.");
   }
 
-  const events = await listEvents(env);
-  const report = buildReport(events);
+  const [events, feedback] = await Promise.all([
+    listQuestionEvents(env),
+    listFeedback(env)
+  ]);
+  const report = buildReport(events, feedback);
 
   await deliverReport(env, report);
 
-  if (events.length) {
-    await deleteEvents(env, events);
-  }
+  if (events.length) await deleteRecords(env, events);
+  if (feedback.length) await deleteRecords(env, feedback);
 
-  return events.length;
+  return { questionCount: events.length, feedbackCount: feedback.length };
 }
 
 export default {
@@ -236,10 +392,8 @@ export default {
     });
 
     try {
-      const count = await sendReport(env);
-      console.log("[weekly-report] completed successfully", {
-        eventCount: count
-      });
+      const counts = await sendReport(env);
+      console.log("[weekly-report] completed successfully", counts);
     } catch (error) {
       console.error("[weekly-report] failed", {
         message: error instanceof Error ? error.message : String(error)
