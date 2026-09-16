@@ -8,22 +8,9 @@
   <meta name="theme-color" content="#F6F2EB">
   <link rel="icon" href="../assets/tpt-favicon.svg" type="image/svg+xml">
   <style>
-    :root {
-      --cream:#F6F2EB;
-      --teal:#2F6B6D;
-      --soft:#85A9AA;
-      --mist:#E4ECEC;
-      --ink:#303534;
-      --white:rgba(255,255,255,.62);
-    }
+    :root { --cream:#F6F2EB; --teal:#2F6B6D; --soft:#85A9AA; --mist:#E4ECEC; --ink:#303534; --white:rgba(255,255,255,.62); }
     * { box-sizing:border-box; }
-    body {
-      margin:0;
-      min-height:100vh;
-      color:var(--ink);
-      background:radial-gradient(circle at 10% 5%, rgba(228,236,236,.78), transparent 28rem),var(--cream);
-      font-family:Georgia,"Times New Roman",serif;
-    }
+    body { margin:0; min-height:100vh; color:var(--ink); background:radial-gradient(circle at 10% 5%,rgba(228,236,236,.78),transparent 28rem),var(--cream); font-family:Georgia,"Times New Roman",serif; }
     a { color:var(--teal); }
     .wrap { width:min(980px,calc(100% - 32px)); margin:auto; }
     header { padding:22px 0; border-bottom:1px solid rgba(47,107,109,.22); }
@@ -47,14 +34,14 @@
     textarea:focus { outline:3px solid rgba(133,169,170,.35); border-color:var(--teal); }
     button { min-height:54px; border-radius:14px; cursor:pointer; font:700 .8rem/1 Arial,sans-serif; }
     button.send { padding:0 20px; border:1px solid var(--teal); color:white; background:var(--teal); letter-spacing:.04em; }
-    button.mic { min-width:94px; padding:0 14px; border:1px solid rgba(47,107,109,.42); color:var(--teal); background:transparent; }
+    button.mic { min-width:110px; padding:0 14px; border:1px solid rgba(47,107,109,.42); color:var(--teal); background:transparent; }
     button.mic.listening { background:var(--mist); }
     button:disabled { cursor:not-allowed; opacity:.55; }
+    .voice-note { display:none; margin:-8px 22px 18px; color:#716d66; font:400 .72rem/1.5 Arial,sans-serif; }
+    .voice-note.visible { display:block; }
     .new-thought-wrap { display:none; padding:0 22px 22px; text-align:center; }
     .new-thought-wrap.visible { display:block; }
     .new-thought { min-height:44px; padding:0 16px; border:1px solid rgba(47,107,109,.38); color:var(--teal); background:transparent; }
-    .voice-note { display:none; margin:-8px 22px 18px; color:#716d66; font:400 .72rem/1.5 Arial,sans-serif; }
-    .voice-note.visible { display:block; }
     .links { display:flex; justify-content:center; flex-wrap:wrap; gap:16px 24px; margin:26px auto 0; font:600 .8rem/1.4 Arial,sans-serif; }
     .links a { text-decoration:none; }
     .privacy { max-width:740px; margin:22px auto 0; color:#716d66; text-align:center; font:400 .76rem/1.55 Arial,sans-serif; }
@@ -65,7 +52,7 @@
       .message { max-width:94%; scroll-margin-top:12px; }
       form { grid-template-columns:1fr 1fr; padding:16px; }
       textarea { grid-column:1 / -1; }
-      button.mic, button.send { width:100%; }
+      button.mic,button.send { width:100%; }
       .chat-top { align-items:flex-start; flex-direction:column; gap:4px; }
       .voice-note { margin-left:16px; margin-right:16px; }
       .new-thought-wrap { padding-left:16px; padding-right:16px; }
@@ -73,189 +60,253 @@
   </style>
 </head>
 <body>
-  <header>
-    <div class="wrap">
-      <a href="../" aria-label="The Perfect Thingy home"><img class="logo" src="../assets/tpt-primary.svg" alt="The Perfect Thingy"></a>
-    </div>
-  </header>
-  <main>
-    <div class="wrap">
-      <section class="intro">
-        <p class="eyebrow">The listening side of the front door</p>
-        <h1>What do you wish we knew?</h1>
-        <p class="lead">Tell us in your own words. You can type, or use your microphone if your browser supports it. The AI may ask one or two short questions when that helps us understand what you mean.</p>
-        <p class="disclosure">This is an AI listener, not Jayme herself. Its job is to understand and preserve useful customer feedback — not to sell you something, defend the business, or promise that a request will be implemented.</p>
-      </section>
-      <section class="chat-shell" aria-label="Share feedback with The Perfect Thingy">
-        <div class="chat-top"><strong>The Perfect Thingy Customer Listener</strong><span id="status">Checking connection…</span></div>
-        <div class="messages" id="messages" aria-live="polite"><div class="message assistant">What do you wish we knew? Tell me in your own words. I may ask a short follow-up if I need help understanding what you mean.</div></div>
-        <form id="listen-form">
-          <button class="mic" id="mic" type="button" hidden>Use microphone</button>
-          <textarea id="feedback" maxlength="1800" placeholder="Tell us what you wish we knew…" aria-label="Your feedback" required></textarea>
-          <button class="send" id="send" type="submit">Share</button>
-        </form>
-        <p class="voice-note" id="voice-note">Your browser handles speech recognition. Review or edit the transcript before you send it.</p>
-        <div class="new-thought-wrap" id="new-thought-wrap"><button class="new-thought" id="new-thought" type="button">Share another thought</button></div>
-      </section>
-      <nav class="links" aria-label="Other The Perfect Thingy tools">
-        <a href="../ask/">Have a question instead? Ask the AI Guide →</a>
-        <a href="../business/">See the business offerings →</a>
-      </nav>
-      <p class="privacy">Please do not enter confidential or sensitive information here. Your conversation is sent to DeepSeek so the AI can understand the feedback, and it may be retained temporarily for owner review and reporting. Ordinary feedback records do not intentionally store your IP address, location, or device identity. For material safety or abuse concerns, source IP and the Cloudflare request identifier may be retained temporarily. If you use the microphone button, speech recognition is provided by your browser or device; the transcript shown in the text box is what this listening system receives.</p>
-    </div>
-  </main>
+  <header><div class="wrap"><a href="../" aria-label="The Perfect Thingy home"><img class="logo" src="../assets/tpt-primary.svg" alt="The Perfect Thingy"></a></div></header>
+  <main><div class="wrap">
+    <section class="intro">
+      <p class="eyebrow">The listening side of the front door</p>
+      <h1>What do you wish we knew?</h1>
+      <p class="lead">Tell us in your own words. You can type, or use your microphone if your browser supports it. The AI may ask one or two short questions when that helps us understand what you mean.</p>
+      <p class="disclosure">This is an AI listener, not Jayme herself. Its job is to understand and preserve useful customer feedback — not to sell you something, defend the business, or promise that a request will be implemented.</p>
+    </section>
+    <section class="chat-shell" aria-label="Share feedback with The Perfect Thingy">
+      <div class="chat-top"><strong>The Perfect Thingy Customer Listener</strong><span id="status">Checking connection…</span></div>
+      <div class="messages" id="messages" aria-live="polite"><div class="message assistant">What do you wish we knew? Tell me in your own words. I may ask a short follow-up if I need help understanding what you mean.</div></div>
+      <form id="listen-form">
+        <button class="mic" id="mic" type="button" hidden>Use microphone</button>
+        <textarea id="feedback" maxlength="1800" placeholder="Tell us what you wish we knew…" aria-label="Your feedback" required></textarea>
+        <button class="send" id="send" type="submit">Share</button>
+      </form>
+      <p class="voice-note" id="voice-note">Tap the microphone once to start and again when you are finished. Pause or breathe naturally; review or edit the transcript before you send it.</p>
+      <div class="new-thought-wrap" id="new-thought-wrap"><button class="new-thought" id="new-thought" type="button">Share another thought</button></div>
+    </section>
+    <nav class="links" aria-label="Other The Perfect Thingy tools"><a href="../ask/">Have a question instead? Ask the AI Guide →</a><a href="../business/">See the business offerings →</a></nav>
+    <p class="privacy">Please do not enter confidential or sensitive information here. Your conversation is sent to DeepSeek so the AI can understand the feedback, and it may be retained temporarily for owner review and reporting. Ordinary feedback records do not intentionally store your IP address, location, or device identity. For material safety or abuse concerns, source IP and the Cloudflare request identifier may be retained temporarily. If you use the microphone button, speech recognition is provided by your browser or device; the transcript shown in the text box is what this listening system receives.</p>
+  </div></main>
   <footer><div class="wrap">© 2026 The Perfect Thingy · Customer-listening pilot</div></footer>
   <script>
-    const form = document.getElementById("listen-form");
-    const input = document.getElementById("feedback");
-    const send = document.getElementById("send");
-    const mic = document.getElementById("mic");
-    const voiceNote = document.getElementById("voice-note");
-    const messagesEl = document.getElementById("messages");
-    const statusEl = document.getElementById("status");
-    const newThoughtWrap = document.getElementById("new-thought-wrap");
-    const newThought = document.getElementById("new-thought");
-    let history = [];
-    let busy = false;
-    let complete = false;
-    let sessionId = newSessionId();
-    let recognition = null;
+    const form=document.getElementById("listen-form");
+    const input=document.getElementById("feedback");
+    const send=document.getElementById("send");
+    const mic=document.getElementById("mic");
+    const voiceNote=document.getElementById("voice-note");
+    const messagesEl=document.getElementById("messages");
+    const statusEl=document.getElementById("status");
+    const newThoughtWrap=document.getElementById("new-thought-wrap");
+    const newThought=document.getElementById("new-thought");
+    let history=[];
+    let busy=false;
+    let complete=false;
+    let sessionId=newSessionId();
+    let recognition=null;
+    let voiceSessionActive=false;
+    let recognitionRunning=false;
+    let restartTimer=null;
+    let shareAfterVoice=false;
 
-    function newSessionId() {
-      if (window.crypto?.randomUUID) return window.crypto.randomUUID();
-      return "listen-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+    function newSessionId(){
+      if(window.crypto?.randomUUID)return window.crypto.randomUUID();
+      return "listen-"+Date.now()+"-"+Math.random().toString(36).slice(2);
     }
-    function addMessage(role, text) {
-      const div = document.createElement("div");
-      div.className = "message " + role;
-      div.textContent = text;
+    function addMessage(role,text){
+      const div=document.createElement("div");
+      div.className="message "+role;
+      div.textContent=text;
       messagesEl.appendChild(div);
       return div;
     }
-    function revealMessage(element) {
-      const mobile = window.matchMedia("(max-width: 640px)").matches;
-      if (mobile) element.scrollIntoView({ behavior: "smooth", block: "start" });
-      else messagesEl.scrollTo({ top: Math.max(0, element.offsetTop - 16), behavior: "smooth" });
+    function revealMessage(element){
+      const mobile=window.matchMedia("(max-width: 640px)").matches;
+      if(mobile)element.scrollIntoView({behavior:"smooth",block:"start"});
+      else messagesEl.scrollTo({top:Math.max(0,element.offsetTop-16),behavior:"smooth"});
     }
-    function setBusy(value) {
-      busy = value;
-      send.disabled = value;
-      input.readOnly = value;
-      mic.disabled = value;
-      send.textContent = value ? "Listening…" : "Share";
+    function setBusy(value){
+      busy=value;
+      send.disabled=value;
+      input.readOnly=value;
+      mic.disabled=value;
+      send.textContent=value?"Listening…":"Share";
     }
-    async function checkConnection() {
-      try {
-        const response = await fetch("/api/listen", { cache: "no-store" });
-        const data = await response.json();
-        statusEl.textContent = data.configured && data.feedbackLoggingConfigured ? "Pilot connected" : "Pilot awaiting connection";
-      } catch { statusEl.textContent = "Connection unavailable"; }
+    async function checkConnection(){
+      try{
+        const response=await fetch("/api/listen",{cache:"no-store"});
+        const data=await response.json();
+        statusEl.textContent=data.configured&&data.feedbackLoggingConfigured?"Pilot connected":"Pilot awaiting connection";
+      }catch{statusEl.textContent="Connection unavailable";}
     }
-    function setupVoice() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) return;
-      recognition = new SpeechRecognition();
-      recognition.lang = document.documentElement.lang || "en-US";
-      recognition.interimResults = false;
-      recognition.continuous = false;
-      mic.hidden = false;
+    function setMicIdle(){
+      mic.classList.remove("listening");
+      mic.textContent="Use microphone";
+      if(!busy)statusEl.textContent="Pilot connected";
+    }
+    function setMicListening(){
+      mic.classList.add("listening");
+      mic.textContent="Stop microphone";
+      statusEl.textContent="Listening — pause or breathe naturally…";
+    }
+    function scheduleRecognitionRestart(){
+      clearTimeout(restartTimer);
+      if(!voiceSessionActive||busy||complete||recognitionRunning)return;
+      restartTimer=setTimeout(startRecognition,120);
+    }
+    function startRecognition(){
+      if(!recognition||!voiceSessionActive||busy||complete||recognitionRunning)return;
+      try{recognition.start();}
+      catch{scheduleRecognitionRestart();}
+    }
+    function stopVoiceSession(){
+      const wasRunning=recognitionRunning;
+      voiceSessionActive=false;
+      clearTimeout(restartTimer);
+      restartTimer=null;
+      if(wasRunning){
+        try{recognition.stop();}catch{}
+      }else{
+        setMicIdle();
+      }
+      return wasRunning;
+    }
+    function setupVoice(){
+      const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+      if(!SpeechRecognition)return;
+      recognition=new SpeechRecognition();
+      recognition.lang=document.documentElement.lang||"en-US";
+      recognition.interimResults=false;
+      recognition.continuous=true;
+      mic.hidden=false;
       voiceNote.classList.add("visible");
-      recognition.addEventListener("start", () => {
-        mic.classList.add("listening");
-        mic.textContent = "Listening…";
-        statusEl.textContent = "Listening to your browser transcript…";
+
+      recognition.addEventListener("start",()=>{
+        recognitionRunning=true;
+        if(voiceSessionActive)setMicListening();
       });
-      recognition.addEventListener("result", (event) => {
-        const finalized = [];
-        for (let i = event.resultIndex; i < event.results.length; i += 1) {
-          const result = event.results[i];
-          if (result.isFinal) {
-            const piece = (result[0]?.transcript || "").trim();
-            if (piece) finalized.push(piece);
+      recognition.addEventListener("result",(event)=>{
+        const finalized=[];
+        for(let i=event.resultIndex;i<event.results.length;i+=1){
+          const result=event.results[i];
+          if(result.isFinal){
+            const piece=(result[0]?.transcript||"").trim();
+            if(piece)finalized.push(piece);
           }
         }
-        const transcript = finalized.join(" ").trim();
-        if (transcript) {
-          const spacer = input.value.trim() ? " " : "";
-          input.value = (input.value + spacer + transcript).slice(0, 1800);
-          input.focus();
+        const transcript=finalized.join(" ").trim();
+        if(transcript){
+          const spacer=input.value.trim()?" ":"";
+          input.value=(input.value+spacer+transcript).slice(0,1800);
         }
       });
-      recognition.addEventListener("error", () => { statusEl.textContent = "Microphone transcription unavailable — you can still type."; });
-      recognition.addEventListener("end", () => {
-        mic.classList.remove("listening");
-        mic.textContent = "Use microphone";
-        if (!busy) statusEl.textContent = "Pilot connected";
+      recognition.addEventListener("error",(event)=>{
+        recognitionRunning=false;
+        if(event.error==="not-allowed"||event.error==="service-not-allowed"||event.error==="audio-capture"){
+          voiceSessionActive=false;
+          clearTimeout(restartTimer);
+          setMicIdle();
+          statusEl.textContent="Microphone permission unavailable — you can still type.";
+          return;
+        }
+        if(event.error!=="no-speech"&&event.error!=="aborted"){
+          statusEl.textContent="Microphone transcription had a temporary problem — still listening…";
+        }
       });
-      mic.addEventListener("click", () => {
-        if (busy) return;
-        try { recognition.start(); } catch {}
+      recognition.addEventListener("end",()=>{
+        recognitionRunning=false;
+        if(shareAfterVoice){
+          shareAfterVoice=false;
+          setMicIdle();
+          setTimeout(()=>shareFeedback(input.value),0);
+          return;
+        }
+        if(voiceSessionActive&&!busy&&!complete){
+          setMicListening();
+          scheduleRecognitionRestart();
+        }else{
+          setMicIdle();
+        }
+      });
+      mic.addEventListener("click",()=>{
+        if(busy)return;
+        if(voiceSessionActive){
+          stopVoiceSession();
+          return;
+        }
+        voiceSessionActive=true;
+        setMicListening();
+        startRecognition();
       });
     }
-    async function shareFeedback(text) {
-      const trimmed = text.trim();
-      if (!trimmed || busy || complete) return;
-      addMessage("user", trimmed);
-      history.push({ role: "user", content: trimmed });
-      input.value = "";
+    async function shareFeedback(text){
+      const trimmed=text.trim();
+      if(!trimmed||busy||complete)return;
+      addMessage("user",trimmed);
+      history.push({role:"user",content:trimmed});
+      input.value="";
       setBusy(true);
-      statusEl.textContent = "Listening…";
-      const pending = addMessage("assistant", "Listening…");
-      pending.setAttribute("aria-label", "AI listener is considering your feedback");
+      statusEl.textContent="Listening…";
+      const pending=addMessage("assistant","Listening…");
+      pending.setAttribute("aria-label","AI listener is considering your feedback");
       revealMessage(pending);
-      try {
-        const response = await fetch("/api/listen", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ session_id: sessionId, messages: history.slice(-10) })
-        });
-        const contentType = (response.headers.get("content-type") || "").toLowerCase();
-        let data = null;
-        if (contentType.includes("application/json")) data = await response.json();
-        else {
+      try{
+        const response=await fetch("/api/listen",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({session_id:sessionId,messages:history.slice(-10)})});
+        const contentType=(response.headers.get("content-type")||"").toLowerCase();
+        let data=null;
+        if(contentType.includes("application/json"))data=await response.json();
+        else{
           await response.text();
-          throw new Error(response.status === 502 ? "The listener hit a temporary server connection problem. Your words may already be preserved; please try again in a moment." : `The listener received an unexpected server response (HTTP ${response.status}). Please try again shortly.`);
+          throw new Error(response.status===502?"The listener hit a temporary server connection problem. Your words may already be preserved; please try again in a moment.":`The listener received an unexpected server response (HTTP ${response.status}). Please try again shortly.`);
         }
-        if (!response.ok) throw new Error(data?.error || "The listener could not respond.");
-        sessionId = data.session_id || sessionId;
-        pending.textContent = data.reply;
+        if(!response.ok)throw new Error(data?.error||"The listener could not respond.");
+        sessionId=data.session_id||sessionId;
+        pending.textContent=data.reply;
         pending.removeAttribute("aria-label");
-        history.push({ role: "assistant", content: data.reply });
-        complete = data.complete === true;
-        statusEl.textContent = complete ? "Captured — thank you" : "Pilot connected";
+        history.push({role:"assistant",content:data.reply});
+        complete=data.complete===true;
+        statusEl.textContent=complete?"Captured — thank you":"Pilot connected";
         revealMessage(pending);
-        if (complete) {
-          form.hidden = true;
+        if(complete){
+          form.hidden=true;
           voiceNote.classList.remove("visible");
           newThoughtWrap.classList.add("visible");
         }
-      } catch (error) {
-        const last = history[history.length - 1];
-        if (last?.role === "user" && last.content === trimmed) history.pop();
-        pending.textContent = error.message || "I couldn't respond just now. Please try again shortly.";
+      }catch(error){
+        const last=history[history.length-1];
+        if(last?.role==="user"&&last.content===trimmed)history.pop();
+        pending.textContent=error.message||"I couldn't respond just now. Please try again shortly.";
         pending.removeAttribute("aria-label");
-        statusEl.textContent = "Connection needs attention";
+        statusEl.textContent="Connection needs attention";
         revealMessage(pending);
-      } finally {
+      }finally{
         setBusy(false);
-        if (!complete && window.matchMedia("(pointer: fine)").matches) input.focus();
+        if(!complete&&window.matchMedia("(pointer: fine)").matches)input.focus();
       }
     }
-    form.addEventListener("submit", (event) => { event.preventDefault(); shareFeedback(input.value); });
-    input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); form.requestSubmit(); }
+    form.addEventListener("submit",(event)=>{
+      event.preventDefault();
+      if(voiceSessionActive){
+        const wasRunning=recognitionRunning;
+        shareAfterVoice=true;
+        stopVoiceSession();
+        if(!wasRunning){
+          shareAfterVoice=false;
+          shareFeedback(input.value);
+        }
+        return;
+      }
+      shareFeedback(input.value);
     });
-    newThought.addEventListener("click", () => {
-      history = [];
-      complete = false;
-      sessionId = newSessionId();
-      messagesEl.innerHTML = "";
-      addMessage("assistant", "What else do you wish we knew? Tell me in your own words.");
-      form.hidden = false;
+    input.addEventListener("keydown",(event)=>{
+      if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();form.requestSubmit();}
+    });
+    newThought.addEventListener("click",()=>{
+      stopVoiceSession();
+      history=[];
+      complete=false;
+      sessionId=newSessionId();
+      messagesEl.innerHTML="";
+      addMessage("assistant","What else do you wish we knew? Tell me in your own words.");
+      form.hidden=false;
       newThoughtWrap.classList.remove("visible");
-      if (recognition) voiceNote.classList.add("visible");
-      statusEl.textContent = "Pilot connected";
-      input.value = "";
+      if(recognition)voiceNote.classList.add("visible");
+      statusEl.textContent="Pilot connected";
+      input.value="";
       input.focus();
     });
     checkConnection();
