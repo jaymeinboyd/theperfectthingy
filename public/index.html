@@ -5,232 +5,185 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Perfect Thingy</title>
-  <meta name="description" content="The Perfect Thingy — art, books, experiments, and other curious things by Jayme Hunt.">
+  <meta name="description" content="The Perfect Thingy helps individuals and small businesses turn knowledge, ideas, experience, and existing resources into practical capability.">
   <meta name="theme-color" content="#F6F2EB">
-
   <link rel="icon" href="/assets/tpt-favicon.svg" type="image/svg+xml">
-
   <style>
     :root {
-      font-family: Georgia, "Times New Roman", serif;
-      color: #25221f;
-      background: #F6F2EB;
-      --deep-teal: #2F6B6D;
-      --soft-teal: #85A9AA;
-      --warm-taupe: #A6937D;
-      --cream: #F6F2EB;
-      --pale-mist: #E4ECEC;
+      font-family:Georgia,"Times New Roman",serif;
+      color:#25221f;
+      background:#F6F2EB;
+      --deep-teal:#2F6B6D;
+      --soft-teal:#85A9AA;
+      --warm-taupe:#A6937D;
+      --cream:#F6F2EB;
+      --pale-mist:#E4ECEC;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing:border-box; }
     body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: clamp(1.25rem, 4vw, 3rem);
-      background:
-        radial-gradient(circle at 12% 8%, rgba(228, 236, 236, .7), transparent 32rem),
-        var(--cream);
+      margin:0;
+      min-height:100vh;
+      padding:clamp(1.25rem,4vw,3rem);
+      background:radial-gradient(circle at 12% 8%,rgba(228,236,236,.7),transparent 32rem),var(--cream);
     }
-
-    main {
-      width: min(760px, 100%);
-    }
-
+    main { width:min(840px,100%); margin:0 auto; }
     .brand {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 1.25rem;
-      margin-bottom: 1.8rem;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:1.25rem;
+      margin-bottom:2rem;
     }
-
     .brand > img {
-      display: block;
-      flex: 1 1 auto;
-      min-width: 0;
-      width: min(100%, 620px);
-      height: auto;
-      margin-left: -2.5%;
+      display:block;
+      flex:1 1 auto;
+      min-width:0;
+      width:min(100%,520px);
+      height:auto;
     }
-
     .contact-link {
-      flex: 0 0 96px;
-      display: block;
-      text-align: center;
-      color: var(--deep-teal);
-      text-decoration: none;
-      font: 700 .68rem/1.25 Arial, sans-serif;
-      letter-spacing: .08em;
-      text-transform: uppercase;
+      flex:0 0 96px;
+      display:block;
+      text-align:center;
+      color:var(--deep-teal);
+      text-decoration:none;
+      font:700 .68rem/1.25 Arial,sans-serif;
+      letter-spacing:.08em;
+      text-transform:uppercase;
     }
-
     .contact-link img {
-      display: block;
-      width: 96px;
-      height: 96px;
-      margin: 0 0 .35rem;
-      padding: 5px;
-      background: #fff;
-      border: 1px solid rgba(47,107,109,.22);
+      display:block;
+      width:96px;
+      height:96px;
+      margin:0 0 .35rem;
+      padding:5px;
+      background:#fff;
+      border:1px solid rgba(47,107,109,.22);
     }
-
-    .contact-link:focus-visible {
-      outline: 2px solid var(--deep-teal);
-      outline-offset: 5px;
-    }
-
+    .contact-link:focus-visible { outline:2px solid var(--deep-teal); outline-offset:5px; }
     .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+      position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+      overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
     }
-
-    .intro {
-      font-size: 1.18rem;
-      line-height: 1.65;
-      max-width: 39rem;
-      margin: 0 0 3rem;
-      color: #4a4540;
+    .eyebrow {
+      margin:0 0 .75rem;
+      color:var(--deep-teal);
+      font:700 .75rem/1.2 Arial,sans-serif;
+      letter-spacing:.18em;
+      text-transform:uppercase;
     }
-
-    section {
-      border-top: 1px solid color-mix(in srgb, var(--warm-taupe) 52%, transparent);
-      padding-top: 1.5rem;
-    }
-
     h2 {
-      font-size: .82rem;
-      text-transform: uppercase;
-      letter-spacing: .18em;
-      font-family: Arial, sans-serif;
-      color: var(--deep-teal);
-      margin: 0 0 1.2rem;
+      margin:.15rem 0 1rem;
+      font-size:clamp(2rem,5vw,3.35rem);
+      line-height:1.08;
+      font-weight:500;
     }
-
+    .mission {
+      max-width:47rem;
+      margin:0 0 3.6rem;
+      color:#4a4540;
+      font-size:1.18rem;
+      line-height:1.72;
+    }
+    section {
+      border-top:1px solid color-mix(in srgb,var(--warm-taupe) 52%,transparent);
+      padding:1.7rem 0 2.4rem;
+    }
     .work {
-      display: block;
-      padding: 1.35rem 0;
-      color: inherit;
-      text-decoration: none;
-      border-bottom: 1px solid #ded7cd;
+      display:block;
+      padding:1.45rem 0;
+      color:inherit;
+      text-decoration:none;
+      border-bottom:1px solid #ded7cd;
     }
-
     .work strong {
-      display: block;
-      font-size: 1.7rem;
-      margin-bottom: .4rem;
-      font-weight: 500;
+      display:block;
+      margin-bottom:.4rem;
+      font-size:1.7rem;
+      font-weight:500;
     }
-
     .work span {
-      font-family: Arial, sans-serif;
-      font-size: .95rem;
-      line-height: 1.5;
+      font-family:Arial,sans-serif;
+      font-size:.95rem;
+      line-height:1.55;
     }
-
-    .work:hover strong,
-    .work:focus-visible strong {
-      color: var(--deep-teal);
+    .work:hover strong,.work:focus-visible strong { color:var(--deep-teal); }
+    .work:focus-visible { outline:2px solid var(--deep-teal); outline-offset:6px; }
+    .vision {
+      max-width:47rem;
+      margin:0;
+      color:#4a4540;
+      font-size:1.08rem;
+      line-height:1.72;
     }
-
-    .work:focus-visible {
-      outline: 2px solid var(--deep-teal);
-      outline-offset: 6px;
-    }
-
     footer {
-      margin-top: 3.5rem;
-      display: flex;
-      align-items: center;
-      gap: .8rem;
-      font-family: Arial, sans-serif;
-      font-size: .8rem;
-      color: #716a62;
+      margin-top:1.8rem;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:1.5rem;
+      color:#716a62;
+      font-family:Arial,sans-serif;
+      font-size:.8rem;
+      line-height:1.55;
     }
-
-    footer img {
-      width: 30px;
-      height: 42px;
-      object-fit: contain;
-    }
-
-    @media (max-width: 560px) {
-      .brand {
-        gap: .75rem;
-      }
-
-      .brand > img {
-        margin-left: 0;
-      }
-
-      .contact-link {
-        flex-basis: 72px;
-        font-size: .58rem;
-      }
-
-      .contact-link img {
-        width: 72px;
-        height: 72px;
-        padding: 4px;
-      }
-
-      .intro {
-        margin-top: -.3rem;
-      }
+    footer .creative { text-align:right; }
+    footer a { color:var(--deep-teal); text-underline-offset:.2em; }
+    @media (max-width:560px) {
+      .brand { gap:.75rem; }
+      .contact-link { flex-basis:72px;font-size:.58rem; }
+      .contact-link img { width:72px;height:72px;padding:4px; }
+      footer { display:block; }
+      footer .creative { margin-top:1rem;text-align:left; }
     }
   </style>
 </head>
-
 <body>
   <main>
     <header class="brand">
       <h1 class="sr-only">The Perfect Thingy</h1>
-      <img src="/assets/tpt-primary.svg" alt="The Perfect Thingy — Art, Ideas, Beauty, Story">
+      <img src="/business/assets/the-perfect-thingy-logo-no-tagline.png" alt="The Perfect Thingy">
       <a class="contact-link" href="/card/" aria-label="Open Jayme Hunt contact page">
         <img src="/assets/contact-qr.svg" alt="QR code to Jayme Hunt contact page">
         <span>Contact</span>
       </a>
     </header>
 
-    <p class="intro">
-      Art, books, experiments, and whatever else turns out to be the perfect thingy.
+    <p class="eyebrow">Practical capability at a human scale</p>
+    <h2>Turn what you already know and have into something you can use.</h2>
+    <p class="mission">
+      The Perfect Thingy helps individuals and small businesses turn knowledge, ideas, experience, and existing resources into practical capability. We create and teach useful tools, systems, and approaches that help people understand what they have, make better-informed decisions, preserve what they know, and build greater capacity to act for themselves.
     </p>
 
     <section>
-      <h2>Now Available</h2>
+      <p class="eyebrow">Current work</p>
 
       <a class="work" href="/business/">
         <strong>AI Companion for Business</strong>
-        <span>A private, business-owned AI capability built around the business you actually have—not a generic guess →</span>
+        <span>A private, business-owned capability built around the business you actually have—not a generic guess →</span>
       </a>
 
-      <a class="work"
-         href="https://www.lulu.com/shop/jayme-hunt-and-molly-spirit-guide/lessons-from-spirit/paperback/product-45427wn.html?page=1&pageSize=4">
-        <strong>Lessons from Spirit</strong>
-        <span>The Five Core Lessons Everyone Needs to Learn — by Molly (Spirit Guide) &amp; Jayme Hunt. Paperback, $9.99 →</span>
+      <a class="work" href="/listen/">
+        <strong>Customer Listening</strong>
+        <span>A practical way to hear what customers wish you knew, preserve their meaning, and find patterns without forcing their feedback into a survey box →</span>
       </a>
 
-      <a class="work"
-         href="https://fineartamerica.com/profiles/1-jayme-hunt/shop">
-        <strong>Jayme Hunt Art</strong>
-        <span>Original watercolor art — fine-art prints, greeting cards, and selected products →</span>
+      <a class="work" href="/ask/">
+        <strong>Public AI Guide</strong>
+        <span>Ask questions about The Perfect Thingy and see how a bounded, evidence-aware public AI can work →</span>
       </a>
     </section>
 
+    <section>
+      <p class="eyebrow">Vision</p>
+      <p class="vision">
+        We envision communities in which individuals and small businesses can use emerging technology, practical knowledge, and creative tools without surrendering their judgment, independence, or identity. The Perfect Thingy seeks to make sophisticated capabilities accessible at a human scale—especially for people and small organizations that might otherwise be left behind by cost, complexity, geography, or rapid technological change.
+      </p>
+    </section>
+
     <footer>
-      <img src="/assets/tpt-icon.svg" alt="" aria-hidden="true">
-      <span>© 2026 The Perfect Thingy</span>
+      <div>© 2026 The Perfect Thingy</div>
+      <div class="creative">Looking for Jayme Hunt’s art, books, and stories? <a href="https://akajay.me">Visit akaJay →</a></div>
     </footer>
   </main>
 </body>
