@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rose | The Perfect Thingy</title>
+  <meta name="description" content="Rose helps small businesses recover, reconcile, connect, and use the knowledge already buried across years of documents, notes, files, and working history.">
+  <meta name="theme-color" content="#F6F2EB">
+  <link rel="icon" href="../assets/tpt-favicon.svg" type="image/svg+xml">
+  <style>
+    :root { --cream:#F6F2EB; --teal:#2F6B6D; --soft:#85A9AA; --taupe:#A6937D; --mist:#E4ECEC; --ink:#303534; --paper:rgba(255,255,255,.52); }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--cream); font-family:Georgia,"Times New Roman",serif; line-height:1.65; }
+    a { color:var(--teal); }
+    .wrap { width:min(1040px,calc(100% - 40px)); margin:auto; }
+    header { padding:26px 0; border-bottom:1px solid rgba(47,107,109,.24); }
+    header .wrap { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }
+    .logo { display:block; width:min(380px,75vw); height:auto; }
+    .contact { flex:0 0 92px; text-align:center; color:var(--teal); text-decoration:none; font:700 .66rem/1.25 Arial,sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+    .contact img { display:block; width:92px; height:92px; padding:5px; margin:0 0 .35rem; background:#fff; border:1px solid rgba(47,107,109,.22); }
+    .hero { padding:82px 0 66px; text-align:center; }
+    .eyebrow { margin:0 0 12px; color:var(--teal); font:700 .75rem/1.2 Arial,sans-serif; letter-spacing:.19em; text-transform:uppercase; }
+    h1 { margin:0 auto 18px; font-size:clamp(3.5rem,10vw,7rem); line-height:.95; font-weight:500; }
+    .lead { max-width:820px; margin:0 auto; font-size:clamp(1.2rem,2.4vw,1.55rem); line-height:1.55; }
+    .sublead { max-width:760px; margin:24px auto 0; color:#5b5b56; font:400 1rem/1.7 Arial,sans-serif; }
+    section { padding:66px 0; border-top:1px solid rgba(47,107,109,.18); }
+    section.alt { background:var(--mist); }
+    h2 { margin:0 0 22px; color:var(--teal); font-size:clamp(2rem,4vw,3.15rem); line-height:1.08; font-weight:500; }
+    h3 { margin:0 0 9px; color:var(--teal); font:700 .8rem/1.3 Arial,sans-serif; letter-spacing:.11em; text-transform:uppercase; }
+    p { max-width:780px; }
+    .center { text-align:center; }
+    .center p { margin-left:auto; margin-right:auto; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:34px 56px; }
+    .lineup { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:0; margin-top:34px; border-top:1px solid var(--soft); border-bottom:1px solid var(--soft); }
+    .step { padding:24px 18px; border-right:1px solid rgba(47,107,109,.22); }
+    .step:last-child { border-right:0; }
+    .num { display:block; margin-bottom:9px; color:var(--teal); font:700 .72rem/1 Arial,sans-serif; letter-spacing:.12em; }
+    .step strong { display:block; margin-bottom:7px; font-size:1.12rem; font-weight:500; }
+    .step span { color:#62625c; font:400 .84rem/1.55 Arial,sans-serif; }
+    .example { padding:28px 0; border-bottom:1px solid rgba(47,107,109,.2); }
+    .example:last-child { border-bottom:0; }
+    .example strong { display:block; margin-bottom:6px; font-size:1.25rem; font-weight:500; }
+    .example p { margin:0; color:#5f605b; font-family:Arial,sans-serif; font-size:.95rem; }
+    .statement { max-width:880px; margin:auto; padding:34px; border-left:4px solid var(--teal); background:var(--paper); font-size:1.3rem; line-height:1.55; }
+    .button { display:inline-block; margin-top:20px; padding:13px 22px; background:var(--teal); border:1px solid var(--teal); color:#fff; text-decoration:none; font:700 .82rem Arial,sans-serif; letter-spacing:.04em; }
+    .button.secondary { margin-left:8px; color:var(--teal); background:transparent; }
+    .fine { color:#6a675f; font:400 .82rem/1.55 Arial,sans-serif; }
+    footer { padding:38px 0; text-align:center; border-top:1px solid rgba(47,107,109,.2); color:#716a62; font:400 .8rem/1.5 Arial,sans-serif; }
+    @media (max-width:760px) {
+      header .wrap { gap:14px; }
+      .contact { flex-basis:72px; font-size:.56rem; }
+      .contact img { width:72px; height:72px; padding:4px; }
+      .grid,.lineup { grid-template-columns:1fr; }
+      .step { border-right:0; border-bottom:1px solid rgba(47,107,109,.2); }
+      .step:last-child { border-bottom:0; }
+      .button.secondary { display:block; width:max-content; margin-left:auto; margin-right:auto; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a href="../" aria-label="The Perfect Thingy home"><img class="logo" src="../business/assets/the-perfect-thingy-logo-no-tagline.png" alt="The Perfect Thingy"></a>
+      <a class="contact" href="../card/" aria-label="Open Jayme Hunt contact page"><img src="../assets/contact-qr.svg" alt="QR code to Jayme Hunt contact page"><span>Contact</span></a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <p class="eyebrow">Deeper recovery for accumulated business knowledge</p>
+        <h1>Rose</h1>
+        <p class="lead"><strong>Your business has a past. Rose helps make it usable.</strong></p>
+        <p class="sublead">Years of useful business knowledge can disappear into old folders, PDFs, notebooks, spreadsheets, drafts, emails, photographs, and the memories of the people who were there. Rose is for the part that cannot be solved by simply uploading more files.</p>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap grid">
+        <div>
+          <h2>Not just import.</h2>
+          <p>Moving documents into a Vault is only the beginning. The harder work is figuring out what those materials actually say, where they agree, where they conflict, what changed over time, and what still needs a human answer.</p>
+        </div>
+        <div>
+          <h2>Business memory with provenance.</h2>
+          <p>Rose helps recover information without flattening uncertainty. Accepted facts can be separated from assumptions, old versions from current decisions, and source material from later interpretation.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap center">
+        <p class="eyebrow">The working sequence</p>
+        <h2>Recover it. Reconcile it. Connect it.</h2>
+        <div class="lineup" aria-label="Rose working sequence">
+          <div class="step"><span class="num">01</span><strong>Gather</strong><span>Bring together the material the business already has.</span></div>
+          <div class="step"><span class="num">02</span><strong>Extract</strong><span>Pull out the decisions, facts, relationships, dates, obligations, and unfinished threads that matter.</span></div>
+          <div class="step"><span class="num">03</span><strong>Reconcile</strong><span>Surface duplicates, contradictions, outdated versions, and places where the record is uncertain.</span></div>
+          <div class="step"><span class="num">04</span><strong>Approve</strong><span>The owner decides what should become accepted business knowledge.</span></div>
+          <div class="step"><span class="num">05</span><strong>Connect</strong><span>Put the recovered knowledge where the Business Companion can actually use it.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap">
+        <p class="eyebrow">What that can uncover</p>
+        <div class="example">
+          <strong>“Why did we stop doing that?”</strong>
+          <p>Rose can help reconstruct the earlier decision from the records that still exist instead of quietly inventing a reason.</p>
+        </div>
+        <div class="example">
+          <strong>“Which version is actually current?”</strong>
+          <p>Multiple plans, policies, price lists, grant drafts, or procedures can be compared so the business does not mistake an old document for current truth.</p>
+        </div>
+        <div class="example">
+          <strong>“What do we already know that could help with this grant?”</strong>
+          <p>Accepted business evidence can be gathered into a stronger working record before it is turned into an external claim.</p>
+        </div>
+        <div class="example">
+          <strong>“What disappears if this person leaves?”</strong>
+          <p>Knowledge held in one person’s files, habits, explanations, or memory can be identified before it walks out the door.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="statement"><strong>Rose does not turn ambiguity into certainty just to make the Vault look tidy.</strong><br>When the record disagrees with itself, that disagreement is useful information. The owner remains the authority on what becomes accepted business truth.</div>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap grid">
+        <div>
+          <h2>Where Rose fits.</h2>
+          <p>The <a href="../business/">Business Companion</a> gives a business a usable AI-ready foundation. Rose goes deeper when the business has a backlog: years of accumulated material, inherited knowledge, scattered records, old projects, grant history, or decisions whose context has been lost.</p>
+        </div>
+        <div>
+          <h2>The result is not “more files.”</h2>
+          <p>The goal is a business record that is easier to question, verify, update, and carry forward—so future plans do not have to begin by reconstructing the past all over again.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap center">
+        <p class="eyebrow">Have a backlog worth recovering?</p>
+        <h2>Bring the messy drawer.</h2>
+        <p>We can start by looking at what exists, what matters, and whether Rose is the right depth of work for the business.</p>
+        <a class="button" href="mailto:founder@theperfectthingy.com?subject=Rose business knowledge recovery">Talk with Jayme about Rose</a>
+        <a class="button secondary" href="../">Back to The Perfect Thingy</a>
+        <p class="fine">Rose is collaborative. Source material, privacy boundaries, and owner approval remain part of the work.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="wrap">© 2026 The Perfect Thingy · Rose</div></footer>
+</body>
+</html>
