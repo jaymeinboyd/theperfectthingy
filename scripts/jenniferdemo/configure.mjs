@@ -1,6 +1,6 @@
 // Test-only adaptation of upstream daedalOS for subfolder deployment.
 // Run in the checked-out daedalOS source root after checkout.
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, rmSync } from "node:fs";
 import { strict as assert } from "node:assert";
 
 const filename = "next.config.js";
@@ -14,3 +14,26 @@ const revised = original.replace(
 );
 writeFileSync(filename, revised);
 console.log("daedalOS: added build-time basePath /jenniferdemo and trailingSlash");
+
+
+// Keep daedalOS virtual filesystem paths (e.g. /System/...) intact,
+// but prefix the browser-facing icon asset URL at its shared generator.
+const functionPath = "utils/functions.ts";
+const functionText = readFileSync(functionPath, "utf8");
+const existingReturn = "  imageSrcMap.set(cacheKey, src);\n\n  return src;\n};";
+assert(functionText.includes(existingReturn), "Pinned upstream imageSrc implementation changed");
+const newReturn = "  const hostedSrc = src.startsWith(\"/\") ? \"/jenniferdemo\" + src : src;\n" +
+  "  imageSrcMap.set(cacheKey, hostedSrc);\n\n  return hostedSrc;\n};";
+writeFileSync(functionPath, functionText.replace(existingReturn, newReturn));
+console.log("daedalOS: icon asset requests now scoped to /jenniferdemo");
+
+// Exclude optional oversized entertainment/media dependencies from this
+// browser-desktop *demo* rather than uploading files exceeding 25 MiB.
+for (const largeOptionalAsset of [
+  "public/Program Files/BoxedWine/fullWine1.7.55-v8.zip",
+  "public/Program Files/Quake3/Quake3Game.pk3",
+  "public/System/ffmpeg/ffmpeg-core.wasm",
+]) {
+  rmSync(largeOptionalAsset, { force: true });
+  console.log("Excluded oversized optional demo asset: " + largeOptionalAsset);
+}
