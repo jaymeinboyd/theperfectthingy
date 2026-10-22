@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { strict as assert } from "node:assert";
 
-const root = path.resolve("upstream-daedalos/out");
+const root = path.resolve(process.env.DAEDALOS_OUT || "upstream-daedalos/out");
 const target = "scripts/jenniferdemo/staging-report.txt";
 const lines = [];
 const say = (line) => { lines.push(line); console.log(line); };
