@@ -20,11 +20,12 @@ console.log("daedalOS: added build-time basePath /jenniferdemo and trailingSlash
 // but prefix the browser-facing icon asset URL at its shared generator.
 const functionPath = "utils/functions.ts";
 const functionText = readFileSync(functionPath, "utf8");
-const existingReturn = "  imageSrcMap.set(cacheKey, src);\n\n  return src;\n};";
-assert(functionText.includes(existingReturn), "Pinned upstream imageSrc implementation changed");
-const newReturn = "  const hostedSrc = src.startsWith(\"/\") ? \"/jenniferdemo\" + src : src;\n" +
-  "  imageSrcMap.set(cacheKey, hostedSrc);\n\n  return hostedSrc;\n};";
-writeFileSync(functionPath, functionText.replace(existingReturn, newReturn));
+const sourceMarker = /imageSrcMap\.set\(cacheKey, src\);\s*return src;/;
+assert(sourceMarker.test(functionText), "Pinned upstream imageSrc implementation changed");
+const newCode =
+  'const hostedSrc = src.startsWith("/") ? "/jenniferdemo" + src : src;\n' +
+  '  imageSrcMap.set(cacheKey, hostedSrc);\n\n  return hostedSrc;';
+writeFileSync(functionPath, functionText.replace(sourceMarker, newCode));
 console.log("daedalOS: icon asset requests now scoped to /jenniferdemo");
 
 // Exclude optional oversized entertainment/media dependencies from this
