@@ -47,7 +47,11 @@ jobs:
         working-directory: upstream-daedalos
         run: |
           yarn install --frozen-lockfile --non-interactive
-          yarn build
+          # Upstream yarn build runs a root-site-specific HTML replacement pass;
+          # our /jenniferdemo adaptation must be tested before rewriting that pass.
+          # Next's production export is already compiled and optimized.
+          yarn build:prebuild
+          yarn next build --webpack
 
       - name: Audit output size and asset paths
         id: audit
