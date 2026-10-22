@@ -5,12 +5,12 @@ import { strict as assert } from "node:assert";
 
 const filename = "next.config.js";
 const original = readFileSync(filename, "utf8");
-const needle = "const nextConfig = {\n";
-assert(original.includes(needle), "Pinned upstream next.config.js changed; re-audit before patching");
+const needle = /const\s+nextConfig\s*=\s*\{/;
+assert(needle.test(original), "Pinned upstream next.config.js changed; first 350 chars: " + original.slice(0, 350));
 assert(!original.includes('basePath: "/jenniferdemo"'), "Configuration already modified");
 const revised = original.replace(
   needle,
-  needle + '  basePath: "/jenniferdemo",\n  trailingSlash: true,\n'
+  (matched) => matched + '\n  basePath: "/jenniferdemo",\n  trailingSlash: true,'
 );
 writeFileSync(filename, revised);
 console.log("daedalOS: added build-time basePath /jenniferdemo and trailingSlash");
