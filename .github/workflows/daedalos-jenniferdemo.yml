@@ -39,6 +39,9 @@ jobs:
       - name: Install Yarn classic
         run: npm install --global yarn@1.22.22
 
+      - name: Validate future Cloudflare build recipe shell syntax
+        run: bash -n scripts/jenniferdemo/build.sh
+
       - name: Configure tested subfolder base path
         working-directory: upstream-daedalos
         run: node ../scripts/jenniferdemo/configure.mjs
