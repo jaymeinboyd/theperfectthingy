@@ -1,0 +1,98 @@
+name: daedalOS subfolder staging test
+
+on:
+  push:
+    branches:
+      - "tpt/daedalos-jenniferdemo"
+    paths:
+      - ".github/workflows/daedalos-jenniferdemo.yml"
+      - "scripts/jenniferdemo/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stage:
+    name: Build and test /jenniferdemo (no deploy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout TPT staging branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Checkout pinned upstream daedalOS
+        uses: actions/checkout@v4
+        with:
+          repository: DustinBrett/daedalOS
+          ref: f017b393d4175eb396a741a7562299423843f1b1
+          path: upstream-daedalos
+          persist-credentials: false
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Yarn classic
+        run: npm install --global yarn@1.22.22
+
+      - name: Configure tested subfolder base path
+        working-directory: upstream-daedalos
+        run: node ../scripts/jenniferdemo/configure.mjs
+
+      - name: Install pinned dependencies and build upstream desktop
+        working-directory: upstream-daedalos
+        run: |
+          yarn install --frozen-lockfile --non-interactive
+          yarn build
+
+      - name: Audit output size and asset paths
+        id: audit
+        continue-on-error: true
+        run: node scripts/jenniferdemo/audit.mjs
+
+      - name: Install Chromium for isolated browser smoke
+        run: |
+          cd upstream-daedalos
+          npx playwright install --with-deps chromium
+
+      - name: Smoke test the generated /jenniferdemo/ directory
+        id: smoke
+        continue-on-error: true
+        run: |
+          mkdir -p _jennifer-preview/jenniferdemo
+          cp -a upstream-daedalos/out/. _jennifer-preview/jenniferdemo/
+          python3 -m http.server 4179 --bind 127.0.0.1 --directory _jennifer-preview >/tmp/jennifer-server.log 2>&1 &
+          sleep 3
+          cp scripts/jenniferdemo/smoke.mjs upstream-daedalos/staging-smoke.mjs
+          cd upstream-daedalos
+          node staging-smoke.mjs
+
+      - name: Save test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daedalos-jennifer-staging-evidence
+          if-no-files-found: warn
+          retention-days: 7
+          path: |
+            scripts/jenniferdemo/staging-report.txt
+            scripts/jenniferdemo/smoke-report.json
+            scripts/jenniferdemo/smoke-screenshot.png
+
+      - name: Enforce isolated demo gate
+        if: always()
+        env:
+          AUDIT: ${{ steps.audit.outcome }}
+          SMOKE: ${{ steps.smoke.outcome }}
+        run: |
+          echo "Audit: $AUDIT"
+          echo "Smoke: $SMOKE"
+          if [ "$AUDIT" != "success" ] || [ "$SMOKE" != "success" ]; then
+            echo "daedalOS is NOT READY for publication under /jenniferdemo."
+            exit 1
+          fi
+          echo "Static build is only a candidate. No deployment was performed."
