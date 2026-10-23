@@ -127,10 +127,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout unchanged TPT production site as preview baseline
+      - name: Checkout existing JenniferDemo preview branch
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: tpt/jennifer-demo-preview
           fetch-depth: 1
 
       - name: Download browser-tested synthetic desktop
@@ -147,11 +147,14 @@ jobs:
           cp -a _bundle/jenniferdemo/. public/jenniferdemo/
           rm -rf _bundle
           # Redirect only this preview branch's homepage to the synthetic desktop.
-          printf '/ /jenniferdemo/ 302\n' >> public/_redirects
+          grep -Fqx '/ /jenniferdemo/ 302' public/_redirects || printf '/ /jenniferdemo/ 302\n' >> public/_redirects
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B tpt/jennifer-demo-preview
           git add public/jenniferdemo public/_redirects
-          git commit -m "Publish synthetic JenniferDemo preview assets (not production)"
-          git push origin HEAD:refs/heads/tpt/jennifer-demo-preview
+          if git diff --cached --quiet; then
+            echo "Preview unchanged; no release commit needed."
+          else
+            git commit -m "Refresh synthetic JenniferDemo preview assets (not production)"
+            git push origin HEAD:refs/heads/tpt/jennifer-demo-preview
+          fi
           echo "GitHub preview branch published. Cloudflare Pages preview remains a separate check."
