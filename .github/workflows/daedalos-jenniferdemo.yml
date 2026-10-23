@@ -146,10 +146,12 @@ jobs:
           mkdir -p public/jenniferdemo
           cp -a _bundle/jenniferdemo/. public/jenniferdemo/
           rm -rf _bundle
+          # Redirect only this preview branch's homepage to the synthetic desktop.
+          printf '/ /jenniferdemo/ 302\n' >> public/_redirects
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B tpt/jennifer-demo-preview
-          git add public/jenniferdemo
+          git add public/jenniferdemo public/_redirects
           git commit -m "Publish synthetic JenniferDemo preview assets (not production)"
           git push origin HEAD:refs/heads/tpt/jennifer-demo-preview
           echo "GitHub preview branch published. Cloudflare Pages preview remains a separate check."
