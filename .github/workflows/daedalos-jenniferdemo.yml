@@ -119,3 +119,37 @@ jobs:
           retention-days: 7
           compression-level: 6
           path: _jennifer-release/
+
+  publish-preview:
+    name: Publish JenniferDemo on isolated preview branch (NOT production)
+    needs: stage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout unchanged TPT production site as preview baseline
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Download browser-tested synthetic desktop
+        uses: actions/download-artifact@v4
+        with:
+          name: jenniferdemo-static-release-bundle
+          path: _bundle
+
+      - name: Build clean static preview branch
+        run: |
+          test -f _bundle/jenniferdemo/index.html
+          test -f _bundle/jenniferdemo/UPSTREAM-MIT-LICENSE.txt
+          mkdir -p public/jenniferdemo
+          cp -a _bundle/jenniferdemo/. public/jenniferdemo/
+          rm -rf _bundle
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B tpt/jennifer-demo-preview
+          git add public/jenniferdemo
+          git commit -m "Publish synthetic JenniferDemo preview assets (not production)"
+          git push origin HEAD:refs/heads/tpt/jennifer-demo-preview
+          echo "GitHub preview branch published. Cloudflare Pages preview remains a separate check."
