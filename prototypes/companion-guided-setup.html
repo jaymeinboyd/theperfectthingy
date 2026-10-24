@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TPT Companion Guided Setup — Synthetic Prototype</title>
+<style>body{font:16px system-ui;background:#f7f4ed;color:#25302d;margin:0}main{max-width:780px;margin:3rem auto;padding:2rem;background:white;border:1px solid #d6d3c9;border-radius:14px}h1{font-size:1.7rem}fieldset{margin:1.5rem 0;border:1px solid #c7c7c0;border-radius:8px;padding:1rem}label{display:block;margin:.7rem 0}select,input,textarea,button{font:inherit}button{background:#294a3f;color:white;border:0;padding:.7rem 1rem;border-radius:6px;cursor:pointer}button.secondary{background:#5a6761}#status{font-weight:600}pre{overflow:auto;white-space:pre-wrap;background:#f1f3f0;padding:1rem}small{color:#5b625e}.warn{background:#fff4df;padding:1rem;border-left:4px solid #ad7931}</style>
+<main><h1>Companion guided setup</h1><p class="warn">Synthetic prototype only. This is <strong>not</strong> a real sign-in, license check, private filesystem or cloud connection. Do not enter real customer information or credentials.</p>
+<fieldset><legend><strong>1. Where would you like your Companion's files to live?</strong></legend>
+<label><input type="radio" name="storage" value="google-drive"> My Google Drive</label>
+<label><input type="radio" name="storage" value="cloudflare-r2"> Private Cloudflare R2</label>
+<label><input type="radio" name="storage" value="both"> Both (no automatic synchronization)</label>
+<label><input type="radio" name="storage" value="self-hosted-future"> My own equipment (future option)</label>
+<label><input type="radio" name="storage" value="guest" checked> Temporary guest demo</label>
+<label>Primary storage (when using both): <select id="primary"><option value="google-drive">Google Drive</option><option value="cloudflare-r2">Cloudflare R2</option></select></label>
+</fieldset>
+<fieldset><legend><strong>2. How would you like to identify yourself through the website?</strong></legend>
+<label><input type="radio" name="identity" value="guest" checked> Guest (no login)</label>
+<label><input type="radio" name="identity" value="google-future"> Google sign-in (planned)</label>
+<label><input type="radio" name="identity" value="passkey-future"> Passkey (planned)</label>
+</fieldset>
+<fieldset><legend><strong>3. Why did you choose these options?</strong></legend><textarea id="reason" rows="3" style="width:98%" placeholder="Optional. Please avoid entering sensitive information."></textarea></fieldset>
+<p><button id="export">Export setup manifest</button> <button class="secondary" id="reset">Reset to guest</button></p>
+<p id="status" role="status">Guest mode — no authentication or cloud connection.</p><details><summary>Preview nonsecret manifest</summary><pre id="preview"></pre></details>
+<small>The portable Companion must remain usable independently of the TPT website. This page saves no credentials, and does not perform real authentication.</small>
+</main>
+<script>
+const storage=()=>document.querySelector('input[name="storage"]:checked').value;
+const identity=()=>document.querySelector('input[name="identity"]:checked').value;
+function manifest(){const s=storage(),i=identity();return {schema_version:"0.1-synthetic",installation_id:"DEMO-ONLY",workspace_mode:s==="guest"?"guest":"planned-private",identity_method:i,website_session_required_for_portable_companion:false,storage:{providers:s==="both"?["google-drive","cloudflare-r2"]:s==="guest"?[]:[s],primary:s==="both"?document.getElementById("primary").value:s==="guest"?null:s,sync_policy:"none",connection_status:"not-connected"},decisions:[{question:"Where would you like your Companion's files to live?",answer:s},{question:"How would you like to identify yourself through the website?",answer:i},{question:"Why these options?",answer:document.getElementById("reason").value}],verification_status:"design-only-no-authentication-or-storage"}}
+function refresh(){document.getElementById("primary").disabled=storage()!=="both";document.getElementById("preview").textContent=JSON.stringify(manifest(),null,2);document.getElementById("status").textContent=storage()==="guest"?"Guest mode — no authentication or cloud connection.":"Planned private mode — no authentication or cloud connection implemented."}
+document.querySelectorAll("input,select,textarea").forEach(el=>el.addEventListener("change",refresh));
+document.getElementById("reason").addEventListener("input",refresh);
+document.getElementById("reset").onclick=()=>{document.querySelector('input[name="storage"][value="guest"]').checked=true;document.querySelector('input[name="identity"][value="guest"]').checked=true;document.getElementById("reason").value="";refresh()};
+document.getElementById("export").onclick=()=>{const blob=new Blob([JSON.stringify(manifest(),null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="companion-setup-manifest-DEMO.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+refresh();
+</script></html>
