@@ -1,160 +1,105 @@
-name: daedalOS subfolder staging test
-
+name: TPT Demo clean root reinstall
 on:
   push:
-    branches:
-      - "tpt/daedalos-jenniferdemo"
+    branches: ["tpt/daedalos-jenniferdemo"]
     paths:
       - ".github/workflows/daedalos-jenniferdemo.yml"
       - "scripts/jenniferdemo/**"
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
-  stage:
-    name: Build and test /jenniferdemo (no deploy)
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Checkout TPT staging branch
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
-
-      - name: Checkout pinned upstream daedalOS
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: DustinBrett/daedalOS
           ref: f017b393d4175eb396a741a7562299423843f1b1
           path: upstream-daedalos
           persist-credentials: false
-
-      - name: Set up Node 22
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
-
-      - name: Install Yarn classic
-        run: npm install --global yarn@1.22.22
-
-      - name: Validate future Cloudflare build recipe shell syntax
-        run: bash -n scripts/jenniferdemo/build.sh
-
-      - name: Configure tested subfolder base path
+      - run: npm install -g yarn@1.22.22
+      - name: Configure clean root installation
         working-directory: upstream-daedalos
         run: node ../scripts/jenniferdemo/configure.mjs
-
-      - name: Install pinned dependencies and build upstream desktop
+      - name: Build root desktop
         working-directory: upstream-daedalos
         run: |
           yarn install --frozen-lockfile --non-interactive
-          # Upstream yarn build runs a root-site-specific HTML replacement pass;
-          # our /jenniferdemo adaptation must be tested before rewriting that pass.
-          # Next's production export is already compiled and optimized.
           yarn build:prebuild
           yarn next build --webpack
-
-      - name: Audit output size and asset paths
-        id: audit
-        continue-on-error: true
-        run: node scripts/jenniferdemo/audit.mjs
-
-      - name: Install Chromium for isolated browser smoke
+      - name: Audit root deployment
+        run: |
+          test -f upstream-daedalos/out/index.html
+          test -f upstream-daedalos/LICENSE
+          grep -q 'TPT Demo' upstream-daedalos/out/index.html
+          if grep -q '/jenniferdemo/_next/' upstream-daedalos/out/index.html; then exit 1; fi
+          python3 - <<'PY'
+          import os
+          root='upstream-daedalos/out'
+          big=[p for d,_,fs in os.walk(root) for f in fs if (p:=os.path.join(d,f)) and os.path.getsize(p)>25*1024*1024]
+          assert not big, f'Cloudflare/GitHub file size limit: {big[:10]}'
+          PY
+      - name: Browser smoke at root
         run: |
           cd upstream-daedalos
           npx playwright install --with-deps chromium
-
-      - name: Smoke test the generated /jenniferdemo/ directory
-        id: smoke
-        continue-on-error: true
-        run: |
-          mkdir -p _jennifer-preview/jenniferdemo
-          cp -a upstream-daedalos/out/. _jennifer-preview/jenniferdemo/
-          python3 -m http.server 4179 --bind 127.0.0.1 --directory _jennifer-preview >/tmp/jennifer-server.log 2>&1 &
+          python3 -m http.server 4179 --bind 127.0.0.1 --directory out >/tmp/tpt-demo-server.log 2>&1 &
           sleep 3
-          cp scripts/jenniferdemo/smoke.mjs upstream-daedalos/staging-smoke.mjs
-          cd upstream-daedalos
-          node staging-smoke.mjs
-
-      - name: Save test evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: daedalos-jennifer-staging-evidence
-          if-no-files-found: warn
-          retention-days: 7
-          path: |
-            scripts/jenniferdemo/staging-report.txt
-            scripts/jenniferdemo/smoke-report.json
-            scripts/jenniferdemo/smoke-screenshot.png
-
-      - name: Enforce isolated demo gate
-        if: always()
-        env:
-          AUDIT: ${{ steps.audit.outcome }}
-          SMOKE: ${{ steps.smoke.outcome }}
+          node - <<'JS'
+          const {chromium}=require('@playwright/test');
+          (async()=>{
+            const b=await chromium.launch({headless:true});
+            const p=await b.newPage();
+            const errors=[];
+            p.on('pageerror',e=>errors.push(e.message));
+            p.on('response',r=>{if(r.url().startsWith('http://127.0.0.1:4179/')&&r.status()>=400)errors.push(r.status()+' '+r.url())});
+            const res=await p.goto('http://127.0.0.1:4179/',{waitUntil:'domcontentloaded',timeout:45000});
+            await p.waitForTimeout(8000);
+            console.log(JSON.stringify({status:res.status(),title:await p.title(),errors},null,2));
+            await b.close();
+            if(res.status()!==200||!(await p.title().catch(()=>''))||errors.length)process.exitCode=1;
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
+      - name: Package root site for isolated Cloudflare project
         run: |
-          echo "Audit: $AUDIT"
-          echo "Smoke: $SMOKE"
-          if [ "$AUDIT" != "success" ] || [ "$SMOKE" != "success" ]; then
-            echo "daedalOS is NOT READY for publication under /jenniferdemo."
-            exit 1
-          fi
-          echo "Static build is only a candidate. No deployment was performed."
-
-      - name: Prepare synthetic JenniferDemo static release bundle
-        run: |
-          mkdir -p _jennifer-release/jenniferdemo
-          cp -a upstream-daedalos/out/. _jennifer-release/jenniferdemo/
-          cp upstream-daedalos/LICENSE _jennifer-release/jenniferdemo/UPSTREAM-MIT-LICENSE.txt
-          echo "Release bundle staged under jenniferdemo/ for a separate Pages preview deployment."
-
-      - name: Upload tested JenniferDemo release bundle (NOT published)
-        uses: actions/upload-artifact@v4
+          mkdir -p _release
+          cp -a upstream-daedalos/out/. _release/
+          cp upstream-daedalos/LICENSE _release/UPSTREAM-MIT-LICENSE.txt
+      - uses: actions/upload-artifact@v4
         with:
-          name: jenniferdemo-static-release-bundle
-          if-no-files-found: error
+          name: tpt-demo-clean-root
+          path: _release/
           retention-days: 7
-          compression-level: 6
-          path: _jennifer-release/
-
-  publish-preview:
-    name: Publish JenniferDemo on isolated preview branch (NOT production)
-    needs: stage
+  publish-demo:
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Checkout existing JenniferDemo preview branch
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: tpt/jennifer-demo-preview
           fetch-depth: 1
-
-      - name: Download browser-tested synthetic desktop
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: jenniferdemo-static-release-bundle
-          path: _bundle
-
-      - name: Build clean static preview branch
+          name: tpt-demo-clean-root
+          path: _release
+      - name: Replace isolated demo preview branch public root
         run: |
-          test -f _bundle/jenniferdemo/index.html
-          test -f _bundle/jenniferdemo/UPSTREAM-MIT-LICENSE.txt
-          mkdir -p public/jenniferdemo
-          cp -a _bundle/jenniferdemo/. public/jenniferdemo/
-          rm -rf _bundle
-          # Redirect only this preview branch's homepage to the synthetic desktop.
-          grep -Fqx '/ /jenniferdemo/ 302' public/_redirects || printf '/ /jenniferdemo/ 302\n' >> public/_redirects
+          test -f _release/index.html
+          test -f _release/UPSTREAM-MIT-LICENSE.txt
+          rm -rf public
+          mv _release public
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/jenniferdemo public/_redirects
-          if git diff --cached --quiet; then
-            echo "Preview unchanged; no release commit needed."
-          else
-            git commit -m "Refresh synthetic JenniferDemo preview assets (not production)"
-            git push origin HEAD:refs/heads/tpt/jennifer-demo-preview
-          fi
-          echo "GitHub preview branch published. Cloudflare Pages preview remains a separate check."
+          git add -A public
+          git commit -m "Clean reinstall TPT Demo at Pages site root" || exit 0
+          git push origin HEAD:refs/heads/tpt/jennifer-demo-preview
