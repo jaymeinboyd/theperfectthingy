@@ -16,6 +16,14 @@ assert(sourceMarker.test(functionText), "Pinned upstream imageSrc implementation
 writeFileSync(functionPath, functionText.replace(sourceMarker,
   'const hostedSrc = src.startsWith("/") ? "/jenniferdemo" + src : src;\n  imageSrcMap.set(cacheKey, hostedSrc);\n  return hostedSrc;'));
 console.log("Applied demo asset prefix.");
+// TPT branding: retain upstream license and attribution, but change the
+// browser tab title and application alias for the synthetic demo.
+const constantsPath = "utils/constants.ts";
+const constantsText = readFileSync(constantsPath, "utf8");
+const aliasMarker = 'alias: "daedalOS",';
+assert(constantsText.includes(aliasMarker), "Pinned upstream alias changed");
+writeFileSync(constantsPath, constantsText.replace(aliasMarker, 'alias: "TPT Demo",'));
+console.log("Set browser tab/application alias to TPT Demo.");
 for (const largeOptionalAsset of [
   "public/Program Files/BoxedWine/fullWine1.7.55-v8.zip",
   "public/Program Files/Quake3/Quake3Game.pk3",
