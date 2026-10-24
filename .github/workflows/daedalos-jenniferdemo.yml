@@ -63,9 +63,10 @@ jobs:
             p.on('response',r=>{if(r.url().startsWith('http://127.0.0.1:4179/')&&r.status()>=400)errors.push(r.status()+' '+r.url())});
             const res=await p.goto('http://127.0.0.1:4179/',{waitUntil:'domcontentloaded',timeout:45000});
             await p.waitForTimeout(8000);
-            console.log(JSON.stringify({status:res.status(),title:await p.title(),errors},null,2));
+            const title=await p.title();
+            console.log(JSON.stringify({status:res.status(),title,errors},null,2));
             await b.close();
-            if(res.status()!==200||!(await p.title().catch(()=>''))||errors.length)process.exitCode=1;
+            if(res.status()!==200||!title.includes('TPT Demo')||errors.length)process.exitCode=1;
           })().catch(e=>{console.error(e);process.exitCode=1});
           JS
       - name: Package root site for isolated Cloudflare project
