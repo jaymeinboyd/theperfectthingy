@@ -33,3 +33,18 @@ schema_version, generated_at, installation_id (synthetic), business_id, companio
 
 ## Ownership decision — confirmed by founder, 2026-10-24
 All storage accounts, including Cloudflare R2, belong to the customer. TPT-managed R2 storage is NOT an offered architecture. TPT may guide initial provisioning and support with revocable delegated permissions, but the customer retains account administration, billing control, recovery credentials, data, and ability to access storage without TPT. This is a requirement after initial purchase, not an optional premium feature. Avoid runtime callbacks or TPT-owned proxy credentials that make TPT's availability necessary for file access. The customer also owns portable Companion configuration, ReLife memory, and export/recovery materials. Distinguish ownership of customer-created assets from software licensing and third-party service terms; these require clear disclosures and must not silently transfer ownership. Demonstrate an outage test with TPT services disabled.
+
+## Post-purchase silence — confirmed founder requirement, 2026-10-24
+
+After initial purchase, provisioning, and delivery of the license key to the customer's Companion, communication between the customer's environment (including the Companion) and TPT ceases. No mandatory phone-home, telemetry, check-in, remote entitlement lookup, startup authorization, update polling, or TPT-hosted runtime dependency. The customer alone chooses whether to use third-party SaaS or other software. TPT support is a separate optional purchase, not a condition of continued operation.
+
+Design implications:
+- A customer-held license must be locally verifiable, without contacting TPT. Document any limits explicitly; default design must not silently impose expiry or periodic renewal.
+- Setup finishes with a deliberate handoff: license key, local verification instructions, Companion and ReLife configuration, nonsecret manifest, customer-controlled recovery/backup, independent provider credentials, and an offline recovery guide.
+- No persistent TPT API token or TPT-owned access key is required for normal operation; any temporary provisioning access must be revoked at handoff.
+- Updates are customer-initiated and optional. Support connections must be explicit, narrowly scoped, revocable, and disabled after the support session unless the customer directs otherwise.
+- Test with all TPT endpoints blocked: Companion startup, license validation, access to customer-selected storage, ReLife, export, backup, and restore must not require TPT.
+- Third-party service availability, subscription fees, and runtime constraints remain customer-selected dependencies, disclosed before purchase.
+- Any current draft suggesting required remote renewal, revocation callbacks, or TPT-mediated Cloudflare R2 access is superseded by this decision.
+
+Implementation status: requirement recorded; local license verification, handoff, and outage acceptance tests remain to be built.
