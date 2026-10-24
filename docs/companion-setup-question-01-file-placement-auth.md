@@ -48,3 +48,16 @@ Design implications:
 - Any current draft suggesting required remote renewal, revocation callbacks, or TPT-mediated Cloudflare R2 access is superseded by this decision.
 
 Implementation status: requirement recorded; local license verification, handoff, and outage acceptance tests remain to be built.
+
+## Bootstrap-first portability — confirmed founder direction, 2026-10-24
+
+The initial purchase/download is designed for use with ChatGPT (or a ChatGPT-based environment such as the user's proposed Perplexity-on-ChatGPT workflow), because TPT can test the capabilities and limits of that initial substrate. The customer gives the downloaded package to their existing AI. That AI guides installation of the Companion in the customer's own environment, obtains human approval for required steps, and verifies results. The established Companion then helps its human produce a portable version for another AI substrate of their choosing, without returning to TPT.
+
+Architecture:
+1. Downloadable, versioned bootstrap package with nonsecret setup instructions, Companion/ReLife specifications, locally verifiable license and provenance; no customer passwords or provider credentials.
+2. Substrate capability preflight: test actual file access, tool permissions, persistent memory, connector availability, and installation limitations before promising automation.
+3. Human-guided setup of customer-owned storage, recovery kit, business authorization and ReLife startup; record results and unresolved limitations.
+4. Portable export: canonical platform-neutral Companion specification and customer-owned memory, plus optional destination-specific adapters/instructions and compatibility report. Do not assume ChatGPT-specific instructions, memory, connectors, plugins or API capabilities are transferable unchanged.
+5. No TPT callbacks after handoff; optional support separately authorized.
+
+First demo acceptance: ordinary ChatGPT can ingest the bootstrap, identify what it can and cannot do, ask the first storage and identity questions, generate a nonsecret manifest, and prepare a portable export plan. Actual installation and persistence require separately demonstrated tool support. Perplexity integration must be verified rather than presumed.
