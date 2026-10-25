@@ -1,0 +1,63 @@
+# Demo decision 01 — file placement and website authentication
+
+Status: design + synthetic interactive prototype; no real identity or storage access.
+
+## Human-facing first question
+**Where would you like your Companion's files to live?**
+- My Google Drive (my account, my OAuth consent; not a TPT-owned vault)
+- My private Cloudflare R2 workspace (identify whether customer or TPT controls the account and independent access)
+- Both, with a named primary and *no automatic sync*
+- On my own equipment (future adapter; not yet implemented)
+- Just try the public demo (temporary browser workspace; no customer records)
+
+Follow-up: **How would you like to identify yourself when using TPT's website?**
+- Passkey or other customer-controlled identity (future)
+- Sign in with Google (future, separate from Drive authorization)
+- Guest demo (no authentication, no private files)
+
+A website session is *not* a Companion license or a storage credential. Human identity, business authorization, licensing, and storage consent are separate steps. Website identity is optional for independently installed Companion use. If TPT's website disappears, the human must still be able to use their Companion and export their data using independent provider access or a recovery kit.
+
+## Demonstration acceptance
+1. Guest sees only synthetic temporary data.
+2. Selecting a synthetic private identity does not imply real login or access.
+3. File placement and identity choices are captured in a **nonsecret** versioned manifest, not an access token.
+4. Switching back to guest clears displayed private synthetic information.
+5. Manifest export remains possible independently of a TPT website session.
+6. Never claim backend authorization, real Google OAuth, R2 access, cross-browser persistence, or offline AI is implemented until tested.
+
+## Next implementation sequence
+Build a *separate* static guided-setup prototype on the staging branch. Inspect and reuse daedalOS mounting points only after confirming no effect on the live demo. Add authenticated backend with per-business authorization in a later milestone. Keep real Frank and private customer files disconnected.
+
+## Proposed manifest fields
+schema_version, generated_at, installation_id (synthetic), business_id, companion_id, workspace_mode, identity_method, website_session_required (false for portable runtime), storage.providers, storage.primary, storage.sync_policy (none), storage.account_control, recovery.export_format, recovery.backup_destination, relife.instructions_ref, decisions[{question,answer,alternatives,rationale}], verification_status.
+
+## Ownership decision — confirmed by founder, 2026-10-24
+All storage accounts, including Cloudflare R2, belong to the customer. TPT-managed R2 storage is NOT an offered architecture. TPT may guide initial provisioning and support with revocable delegated permissions, but the customer retains account administration, billing control, recovery credentials, data, and ability to access storage without TPT. This is a requirement after initial purchase, not an optional premium feature. Avoid runtime callbacks or TPT-owned proxy credentials that make TPT's availability necessary for file access. The customer also owns portable Companion configuration, ReLife memory, and export/recovery materials. Distinguish ownership of customer-created assets from software licensing and third-party service terms; these require clear disclosures and must not silently transfer ownership. Demonstrate an outage test with TPT services disabled.
+
+## Post-purchase silence — confirmed founder requirement, 2026-10-24
+
+After initial purchase, provisioning, and delivery of the license key to the customer's Companion, communication between the customer's environment (including the Companion) and TPT ceases. No mandatory phone-home, telemetry, check-in, remote entitlement lookup, startup authorization, update polling, or TPT-hosted runtime dependency. The customer alone chooses whether to use third-party SaaS or other software. TPT support is a separate optional purchase, not a condition of continued operation.
+
+Design implications:
+- A customer-held license must be locally verifiable, without contacting TPT. Document any limits explicitly; default design must not silently impose expiry or periodic renewal.
+- Setup finishes with a deliberate handoff: license key, local verification instructions, Companion and ReLife configuration, nonsecret manifest, customer-controlled recovery/backup, independent provider credentials, and an offline recovery guide.
+- No persistent TPT API token or TPT-owned access key is required for normal operation; any temporary provisioning access must be revoked at handoff.
+- Updates are customer-initiated and optional. Support connections must be explicit, narrowly scoped, revocable, and disabled after the support session unless the customer directs otherwise.
+- Test with all TPT endpoints blocked: Companion startup, license validation, access to customer-selected storage, ReLife, export, backup, and restore must not require TPT.
+- Third-party service availability, subscription fees, and runtime constraints remain customer-selected dependencies, disclosed before purchase.
+- Any current draft suggesting required remote renewal, revocation callbacks, or TPT-mediated Cloudflare R2 access is superseded by this decision.
+
+Implementation status: requirement recorded; local license verification, handoff, and outage acceptance tests remain to be built.
+
+## Bootstrap-first portability — confirmed founder direction, 2026-10-24
+
+The initial purchase/download is designed for use with ChatGPT (or a ChatGPT-based environment such as the user's proposed Perplexity-on-ChatGPT workflow), because TPT can test the capabilities and limits of that initial substrate. The customer gives the downloaded package to their existing AI. That AI guides installation of the Companion in the customer's own environment, obtains human approval for required steps, and verifies results. The established Companion then helps its human produce a portable version for another AI substrate of their choosing, without returning to TPT.
+
+Architecture:
+1. Downloadable, versioned bootstrap package with nonsecret setup instructions, Companion/ReLife specifications, locally verifiable license and provenance; no customer passwords or provider credentials.
+2. Substrate capability preflight: test actual file access, tool permissions, persistent memory, connector availability, and installation limitations before promising automation.
+3. Human-guided setup of customer-owned storage, recovery kit, business authorization and ReLife startup; record results and unresolved limitations.
+4. Portable export: canonical platform-neutral Companion specification and customer-owned memory, plus optional destination-specific adapters/instructions and compatibility report. Do not assume ChatGPT-specific instructions, memory, connectors, plugins or API capabilities are transferable unchanged.
+5. No TPT callbacks after handoff; optional support separately authorized.
+
+First demo acceptance: ordinary ChatGPT can ingest the bootstrap, identify what it can and cannot do, ask the first storage and identity questions, generate a nonsecret manifest, and prepare a portable export plan. Actual installation and persistence require separately demonstrated tool support. Perplexity integration must be verified rather than presumed.

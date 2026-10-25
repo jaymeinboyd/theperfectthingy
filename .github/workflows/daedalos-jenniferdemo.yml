@@ -1,0 +1,106 @@
+name: TPT Demo clean root reinstall
+on:
+  push:
+    branches: ["tpt/daedalos-jenniferdemo"]
+    paths:
+      - ".github/workflows/daedalos-jenniferdemo.yml"
+      - "scripts/jenniferdemo/**"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: DustinBrett/daedalOS
+          ref: f017b393d4175eb396a741a7562299423843f1b1
+          path: upstream-daedalos
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install -g yarn@1.22.22
+      - name: Configure clean root installation
+        working-directory: upstream-daedalos
+        run: node ../scripts/jenniferdemo/configure.mjs
+      - name: Build root desktop
+        working-directory: upstream-daedalos
+        run: |
+          yarn install --frozen-lockfile --non-interactive
+          yarn build:prebuild
+          yarn next build --webpack
+      - name: Audit root deployment
+        run: |
+          test -f upstream-daedalos/out/index.html
+          test -f upstream-daedalos/LICENSE
+          grep -q 'TPT Demo' upstream-daedalos/out/index.html
+          if grep -q '/jenniferdemo/_next/' upstream-daedalos/out/index.html; then exit 1; fi
+          python3 - <<'PY'
+          import os
+          root='upstream-daedalos/out'
+          big=[p for d,_,fs in os.walk(root) for f in fs if (p:=os.path.join(d,f)) and os.path.getsize(p)>25*1024*1024]
+          assert not big, f'Cloudflare/GitHub file size limit: {big[:10]}'
+          PY
+      - name: Browser smoke at root
+        run: |
+          cd upstream-daedalos
+          npx playwright install --with-deps chromium
+          python3 -m http.server 4179 --bind 127.0.0.1 --directory out >/tmp/tpt-demo-server.log 2>&1 &
+          sleep 3
+          node - <<'JS'
+          const {chromium}=require('@playwright/test');
+          (async()=>{
+            const b=await chromium.launch({headless:true});
+            const p=await b.newPage();
+            const errors=[];
+            p.on('pageerror',e=>errors.push(e.message));
+            p.on('response',r=>{if(r.url().startsWith('http://127.0.0.1:4179/')&&r.status()>=400)errors.push(r.status()+' '+r.url())});
+            const res=await p.goto('http://127.0.0.1:4179/',{waitUntil:'domcontentloaded',timeout:45000});
+            await p.waitForTimeout(8000);
+            const title=await p.title();
+            console.log(JSON.stringify({status:res.status(),title,errors},null,2));
+            await b.close();
+            if(res.status()!==200||!title.includes('TPT Demo')||errors.length)process.exitCode=1;
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
+      - name: Package root site for isolated Cloudflare project
+        run: |
+          mkdir -p _release
+          cp -a upstream-daedalos/out/. _release/
+          cp upstream-daedalos/LICENSE _release/UPSTREAM-MIT-LICENSE.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tpt-demo-clean-root
+          path: _release/
+          retention-days: 7
+  publish-demo:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: tpt/jennifer-demo-preview
+          fetch-depth: 1
+      - uses: actions/download-artifact@v4
+        with:
+          name: tpt-demo-clean-root
+          path: _release
+      - name: Replace isolated demo preview branch public root
+        run: |
+          test -f _release/index.html
+          test -f _release/UPSTREAM-MIT-LICENSE.txt
+          rm -rf public
+          mv _release public
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A public
+          git commit -m "Clean reinstall TPT Demo at Pages site root" || exit 0
+          git push origin HEAD:refs/heads/tpt/jennifer-demo-preview
