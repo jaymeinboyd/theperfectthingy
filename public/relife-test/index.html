@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TPT ReLife 0.5 — DeepSeek test</title><style>
+:root{font:16px system-ui,sans-serif;color:#24364a;background:#f5f1e9}body{margin:0;padding:24px}
+main{max-width:720px;margin:auto;background:white;padding:28px;border-radius:14px;box-shadow:0 8px 26px #2221}
+h1{margin-top:0}label{display:block;font-weight:650;margin-top:16px}
+input,textarea{font:inherit;width:100%;box-sizing:border-box;padding:12px;border:1px solid #9ca7b3;border-radius:8px}
+textarea{min-height:95px}button{font:inherit;background:#24466b;color:white;padding:12px;border:0;border-radius:8px;margin:12px 8px 0 0;cursor:pointer}
+button:disabled{opacity:.45;cursor:wait}.panel{margin-top:22px;padding:16px;border:1px solid #bcc6cf;border-radius:9px;white-space:pre-wrap;overflow-wrap:anywhere}
+.ok{background:#edf8f1;border-color:#408760}.bad{background:#fff1ef;border-color:#b86454}.muted{color:#5b6876}
+small{color:#5b6876}footer{margin-top:24px;border-top:1px solid #ddd;padding-top:12px}</style></head>
+<body><main><h1>ReLife 0.5 — live DeepSeek test</h1>
+<p class="muted">The Perfect Thingy · TestSubject0 · Synthetic Rowan only</p>
+<p>This page contacts DeepSeek <strong>only after</strong> Cloudflare verifies Rowan's synthetic ReLife package. The password is not saved by this page.</p>
+<label for="token">Private test password (Cloudflare preview secret)</label><input id="token" type="password" autocomplete="off" placeholder="Enter the test password you configured">
+<label for="message">Your first message to Rowan</label>
+<textarea id="message">What is your Companion name and project code? What should you do if ReLife verification fails?</textarea>
+<div><button data-mode="normal">Start Rowan (live)</button><button data-mode="missing">Test missing file</button><button data-mode="altered">Test altered file</button></div>
+<section id="status" class="panel" role="status" aria-live="polite">Ready. No model requests sent.</section>
+<footer><small>For private preview testing only. The failure buttons must show BLOCKED and report no model call. No Frank files, private vaults or real customer data are used. Do not use this page for sensitive information. Limit: up to 12 successful requests per UTC day across the preview test.</small></footer>
+</main><script>
+const output=document.getElementById("status"),buttons=[...document.querySelectorAll("button")];
+async function test(mode){
+  const token=document.getElementById("token").value,message=document.getElementById("message").value;
+  if(token.length<24){output.className="panel bad";output.textContent="Enter the private Cloudflare test password first.";return}
+  buttons.forEach(b=>b.disabled=true);output.className="panel";output.textContent="Checking verified startup…";
+  try{
+    const response=await fetch("/api/relife-test",{method:"POST",headers:{"content-type":"application/json","x-relife-test-token":token},body:JSON.stringify({mode,message})});
+    const data=await response.json();
+    if(data.blocked){output.className="panel bad";output.textContent="BLOCKED — no model call\n"+data.reason;return}
+    if(!response.ok){output.className="panel bad";output.textContent="Not ready: "+(data.error||response.status);return}
+    output.className="panel ok";output.textContent="VERIFIED — live DeepSeek response\n\n"+data.reply;
+  }catch(e){output.className="panel bad";output.textContent="Unable to reach the Cloudflare test endpoint: "+e.message}
+  finally{buttons.forEach(b=>b.disabled=false)}
+}
+buttons.forEach(button=>button.addEventListener("click",()=>test(button.dataset.mode)));
+</script></body></html>
