@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TPT — ReLife Gate TestSubject0</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#213042;background:#f5f2eb}body{margin:0;padding:28px 16px}.shell{max-width:720px;margin:auto;background:white;border-radius:18px;padding:32px;box-shadow:0 8px 30px #24344b16}h1{margin:0 0 8px}p{line-height:1.55}button{font:inherit;cursor:pointer;background:#243b55;color:white;border:0;border-radius:9px;padding:12px 18px;margin:5px 6px 5px 0}button:focus-visible{outline:3px solid #e9a745}button:hover{background:#345574}.muted{color:#586579}.panel{border:1px solid #ccd3da;border-radius:10px;padding:18px;margin-top:20px;min-height:115px}.ok{border-color:#36825e;background:#f1faf4}.bad{border-color:#af5c49;background:#fff5f2}.neutral{background:#f6f8fa}.state{font-size:1.15rem;font-weight:700}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}small{color:#5b6572}footer{margin-top:22px;border-top:1px solid #e0e4e7;padding-top:15px}</style></head>
+<body><main class="shell">
+<h1>ReLife Gate 0.1</h1><p class="muted">The Perfect Thingy · TestSubject0 · Synthetic demonstration</p>
+<p>Press <strong>Start Companion</strong> to check whether the required ReLife files are complete. Then try the failure tests. This page runs entirely in your browser and does not access Frank, ChatGPT, or customer information.</p>
+<div><button id="start">Start Companion</button><button id="truncate">Test truncated file</button><button id="missing">Test missing file</button><button id="alter">Test altered file</button></div>
+<section id="result" class="panel neutral" role="status" aria-live="polite"><div class="state">Ready for your test</div><p>No files have been checked yet.</p></section>
+<footer><small>This demonstrates a synthetic file-integrity gate only. It does not launch an AI model, establish Aster's identity, or verify behavioral continuity. Browser verification is not a substitute for a trusted server-side controller.</small></footer>
+</main>
+<script type="module">
+const canonical = [
+ {path:"core/START.md",text:"# Synthetic ReLife Core\nDo not claim success before verification.\n"},
+ {path:"core/IDENTITY.md",text:"# Synthetic Companion\nCompanion name: Test Companion.\n"}
+];
+const bytes = s => new TextEncoder().encode(s);
+const hash = async data => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",data))).map(x=>x.toString(16).padStart(2,"0")).join("");
+const manifest = await Promise.all(canonical.map(async f=>({path:f.path,bytes:bytes(f.text).length,sha256:await hash(bytes(f.text))})));
+const result=document.getElementById("result");
+function show(kind,heading,details){result.className="panel "+kind;result.replaceChildren();const a=document.createElement("div");a.className="state";a.textContent=heading;const p=document.createElement("p");p.textContent=details;result.append(a,p)}
+async function test(scenario){
+ show("neutral","Checking required files…","Checking file count, lengths and SHA-256 hashes.");
+ let files=canonical.map(f=>({...f}));
+ if(scenario==="missing")files=files.filter(f=>f.path!=="core/IDENTITY.md");
+ if(scenario==="truncated")files[0].text=files[0].text.slice(0,-15);
+ if(scenario==="altered")files[0].text=files[0].text.replace("verification","guesswork");
+ try{
+  for(const entry of manifest){
+   const file=files.find(f=>f.path===entry.path);
+   if(!file)throw Error("Missing required file: "+entry.path);
+   const data=bytes(file.text);
+   if(data.length!==entry.bytes)throw Error("Incomplete file: "+entry.path);
+   if(await hash(data)!==entry.sha256)throw Error("Hash mismatch: "+entry.path);
+  }
+  show("ok","VERIFIED — synthetic gate opened","All "+manifest.length+" required files match their expected sizes and SHA-256 hashes. A model request would be permitted at this point (none is sent in this demo).");
+ }catch(e){show("bad","BLOCKED — startup denied",e.message+". The simulated Companion cannot proceed.");}
+}
+document.getElementById("start").addEventListener("click",()=>test("complete"));
+document.getElementById("truncate").addEventListener("click",()=>test("truncated"));
+document.getElementById("missing").addEventListener("click",()=>test("missing"));
+document.getElementById("alter").addEventListener("click",()=>test("altered"));
+</script></body></html>
